@@ -2,12 +2,16 @@ const express = require("express");
 const cors = require("cors");
 
 const app = express();
-app.use(cors());
+
+app.use(cors({
+    origin: "*",
+    methods: ["GET", "POST"]
+}));
+
 app.use(express.json());
 app.use(express.static(__dirname));
 
-// lưu dữ liệu (sau này có thể thay DB)
-let users = {}; 
+let users = {};
 let codes = [];
 
 // tạo code
@@ -21,12 +25,16 @@ function generateCode() {
     return code;
 }
 
-// lấy IP
 function getIP(req) {
     return req.headers["x-forwarded-for"] || req.socket.remoteAddress;
 }
 
-// ===== API NHẬN CODE =====
+app.get("/create-token", (req, res) => {
+    const token = Math.random().toString(36).substring(2, 15) + Date.now();
+    res.json({ token });
+});
+
+// GET CODE
 app.post("/get-code", (req, res) => {
     const { deviceId } = req.body;
     const ip = getIP(req);
@@ -35,7 +43,6 @@ app.post("/get-code", (req, res) => {
         return res.json({ success: false, message: "Thiếu deviceId" });
     }
 
-    // check đã nhận chưa
     if (users[deviceId]) {
         return res.json({
             success: false,
@@ -46,43 +53,24 @@ app.post("/get-code", (req, res) => {
 
     const code = generateCode();
 
-    users[deviceId] = {
-        code: code,
-        ip: ip,
-        time: Date.now()
-    };
+    users[deviceId] = { code, ip, time: Date.now() };
 
-    codes.push({
-        code: code,
-        deviceId: deviceId,
-        ip: ip,
-        time: Date.now()
-    });
+    codes.push({ code, deviceId, ip, time: Date.now() });
 
-    console.log("NEW CODE:", code, ip);
-
-    res.json({
-        success: true,
-        code: code
-    });
+    res.json({ success: true, code });
 });
 
-// ===== LỊCH SỬ =====
+// history
 app.get("/history", (req, res) => {
     res.json(codes);
 });
 
-// ===== CHECK CODE =====
+// check
 app.get("/check", (req, res) => {
     const code = req.query.code;
-
     const found = codes.find(c => c.code === code);
 
-    if (!found) {
-        return res.json({ valid: false });
-    }
-
-    res.json({ valid: true, data: found });
+    res.json(found ? { valid: true, data: found } : { valid: false });
 });
 
 app.listen(3000, () => {
