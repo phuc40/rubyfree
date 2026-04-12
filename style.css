@@ -1,0 +1,148 @@
+/* ===== RESET ===== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* ===== BODY ===== */
+body {
+    background: #0b1220;
+    font-family: 'Segoe UI', sans-serif;
+    color: white;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    min-height: 100vh;
+    padding: 20px;
+}
+
+/* ===== CONTAINER ===== */
+.container {
+    position: relative;
+    width: 100%;
+    max-width: 400px;
+
+    background: #111827;
+    border-radius: 20px;
+
+    padding: 25px;
+    text-align: center;
+
+    box-shadow: 0 0 30px rgba(0,0,0,0.6);
+    overflow: hidden;
+}
+
+/* ===== VIỀN SÁNG ===== */
+.container::before {
+    content: "";
+    position: absolute;
+    inset: -2px;
+    border-radius: 20px;
+
+    background: linear-gradient(45deg, #ff4d6d, #00e5ff, #00ff88, #ff4d6d);
+    background-size: 300%;
+
+    z-index: -1;
+    animation: borderGlow 6s linear infinite;
+}
+
+@keyframes borderGlow {
+    0% { background-position: 0% }
+    100% { background-position: 300% }
+}
+
+/* ===== TITLE ===== */
+.container h1 {
+    margin-bottom: 20px;
+    font-size: 24px;
+}
+
+/* ===== BUTTON ===== */
+button {
+    width: 100%;
+    padding: 14px;
+    font-size: 16px;
+
+    border: none;
+    border-radius: 12px;
+
+    background: linear-gradient(90deg, #ff4d6d, #ff758f);
+    color: white;
+
+    cursor: pointer;
+    transition: 0.3s;
+
+    box-shadow: 0 0 10px rgba(255, 77, 109, 0.6);
+}
+
+button:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 25px rgba(255, 77, 109, 1);
+}
+
+/* ===== CODE ===== */
+#code {
+    margin-top: 15px;
+    font-size: 20px;
+    color: #ffd700;
+
+    background: #1f2937;
+    padding: 10px;
+    border-radius: 10px;
+
+    letter-spacing: 2px;
+
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.6);
+}
+
+/* ===== TEXT ===== */
+.container p {
+    margin-top: 15px;
+    font-size: 14px;
+    opacity: 0.8;
+}
+
+/* ===== FACEBOOK BUTTON ===== */
+.fb-btn {
+    display: inline-block;
+    margin-top: 10px;
+
+    padding: 10px 20px;
+    border-radius: 10px;
+
+    background: #1877f2;
+    color: white;
+    text-decoration: none;
+
+    transition: 0.3s;
+
+    box-shadow: 0 0 10px rgba(24, 119, 242, 0.6);
+}
+
+.fb-btn:hover {
+    background: #0f5dc2;
+    box-shadow: 0 0 20px rgba(24, 119, 242, 1);
+}
+
+/* ===== DESKTOP ===== */
+@media (min-width: 768px) {
+    .container {
+        max-width: 500px;
+        padding: 35px;
+    }
+
+    .container h1 {
+        font-size: 28px;
+    }
+
+    button {
+        font-size: 18px;
+    }
+
+    #code {
+        font-size: 24px;
+    }
+}
