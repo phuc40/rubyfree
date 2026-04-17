@@ -7,142 +7,135 @@
 
 /* ===== BODY ===== */
 body {
-    background: #0b1220;
-    font-family: 'Segoe UI', sans-serif;
-    color: white;
+    font-family: Inter, -apple-system, sans-serif;
+    background: radial-gradient(circle at top, #0f172a, #020617 70%);
+    color: #e5e7eb;
 
     display: flex;
     justify-content: center;
     align-items: center;
 
     min-height: 100vh;
-    padding: 20px;
 }
 
 /* ===== CONTAINER ===== */
 .container {
-    position: relative;
     width: 100%;
     max-width: 400px;
 
-    background: #111827;
+    padding: 32px;
     border-radius: 20px;
 
-    padding: 25px;
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(30px);
+
+    border: 1px solid rgba(255,255,255,0.06);
+
     text-align: center;
 
-    box-shadow: 0 0 30px rgba(0,0,0,0.6);
-    overflow: hidden;
-}
-
-/* ===== VIỀN SÁNG ===== */
-.container::before {
-    content: "";
-    position: absolute;
-    inset: -2px;
-    border-radius: 20px;
-
-    background: linear-gradient(45deg, #ff4d6d, #00e5ff, #00ff88, #ff4d6d);
-    background-size: 300%;
-
-    z-index: -1;
-    animation: borderGlow 6s linear infinite;
-}
-
-@keyframes borderGlow {
-    0% { background-position: 0% }
-    100% { background-position: 300% }
+    box-shadow: 
+        0 20px 60px rgba(0,0,0,0.8),
+        0 0 40px rgba(59,130,246,0.1);
 }
 
 /* ===== TITLE ===== */
-.container h1 {
+h1 {
+    font-size: 22px;
+    font-weight: 600;
     margin-bottom: 20px;
-    font-size: 24px;
+
+    background: linear-gradient(90deg, #60a5fa, #a78bfa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
 }
 
 /* ===== BUTTON ===== */
 button {
     width: 100%;
     padding: 14px;
-    font-size: 16px;
 
-    border: none;
     border-radius: 12px;
+    border: none;
 
-    background: linear-gradient(90deg, #ff4d6d, #ff758f);
+    background: linear-gradient(90deg, #3b82f6, #6366f1);
     color: white;
 
-    cursor: pointer;
-    transition: 0.3s;
+    font-size: 15px;
+    font-weight: 500;
 
-    box-shadow: 0 0 10px rgba(255, 77, 109, 0.6);
+    cursor: pointer;
+
+    transition: all 0.25s ease;
+
+    box-shadow: 0 10px 25px rgba(59,130,246,0.3);
 }
 
 button:hover {
-    transform: scale(1.05);
-    box-shadow: 0 0 25px rgba(255, 77, 109, 1);
+    transform: translateY(-2px);
+    box-shadow: 0 15px 35px rgba(99,102,241,0.5);
 }
 
 /* ===== CODE ===== */
 #code {
     margin-top: 15px;
-    font-size: 20px;
-    color: #ffd700;
 
-    background: #1f2937;
-    padding: 10px;
+    font-size: 20px;
+    font-weight: 600;
+
+    padding: 12px;
     border-radius: 10px;
 
-    letter-spacing: 2px;
+    background: rgba(2,6,23,0.8);
 
-    box-shadow: 0 0 10px rgba(255, 215, 0, 0.6);
+    border: 1px solid rgba(255,255,255,0.08);
+
+    letter-spacing: 3px;
+
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.6);
 }
 
 /* ===== TEXT ===== */
-.container p {
-    margin-top: 15px;
+h2 {
+    margin-top: 20px;
     font-size: 14px;
-    opacity: 0.8;
+    font-weight: 500;
+    color: #9ca3af;
+}
+
+.sub {
+    margin-top: 18px;
+    font-size: 13px;
+    color: #6b7280;
 }
 
 /* ===== FACEBOOK BUTTON ===== */
 .fb-btn {
     display: inline-block;
-    margin-top: 10px;
+    margin-top: 12px;
 
-    padding: 10px 20px;
+    padding: 10px 18px;
+
     border-radius: 10px;
 
-    background: #1877f2;
-    color: white;
+    background: rgba(255,255,255,0.05);
+
+    border: 1px solid rgba(255,255,255,0.08);
+
+    color: #e5e7eb;
     text-decoration: none;
 
     transition: 0.3s;
-
-    box-shadow: 0 0 10px rgba(24, 119, 242, 0.6);
 }
 
 .fb-btn:hover {
-    background: #0f5dc2;
-    box-shadow: 0 0 20px rgba(24, 119, 242, 1);
+    background: rgba(59,130,246,0.15);
+    border-color: rgba(59,130,246,0.4);
 }
 
-/* ===== DESKTOP ===== */
-@media (min-width: 768px) {
+/* ===== MOBILE ===== */
+@media (max-width: 500px) {
     .container {
-        max-width: 500px;
-        padding: 35px;
-    }
-
-    .container h1 {
-        font-size: 28px;
-    }
-
-    button {
-        font-size: 18px;
-    }
-
-    #code {
-        font-size: 24px;
+        margin: 12px;
+        padding: 24px;
     }
 }
