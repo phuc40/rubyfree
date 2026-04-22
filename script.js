@@ -55,11 +55,17 @@ window.onload = function () {
     .then(data => {
         if (data.success) {
             document.getElementById("code").innerText = data.code;
+            
+            // ✨ Hiển thị phần nhập mã
+            document.getElementById("codeInputSection").style.display = "block";
+            
             alert("🎁 Mã của bạn: " + data.code);
         } else {
             alert(data.message);
             if (data.code) {
                 document.getElementById("code").innerText = data.code;
+                // ✨ Hiển thị phần nhập mã ngay cả khi user đã nhận trước đó
+                document.getElementById("codeInputSection").style.display = "block";
             }
         }
     });
@@ -68,3 +74,51 @@ window.onload = function () {
     localStorage.removeItem("reward_token");
     localStorage.removeItem("start_time");
 };
+
+// ===== NHẬP & GỬI MÃ =====
+function submitCode() {
+    const userCode = document.getElementById("userCodeInput").value.trim();
+    const displayedCode = document.getElementById("code").innerText;
+    const statusEl = document.getElementById("submitStatus");
+
+    // Kiểm tra user nhập gì
+    if (!userCode) {
+        statusEl.innerText = "❌ Vui lòng nhập mã!";
+        statusEl.style.color = "#f44336";
+        return;
+    }
+
+    // Gửi mã lên server
+    fetch("/submit-code", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            deviceId: deviceId,
+            userInputCode: userCode,
+            systemCode: displayedCode,
+            timestamp: new Date().toISOString()
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            statusEl.innerText = "✅ Mã đã được lưu thành công!";
+            statusEl.style.color = "#4CAF50";
+            document.getElementById("userCodeInput").value = "";
+            
+            // Optional: ẩn input sau 2 giây
+            setTimeout(() => {
+                document.getElementById("codeInputSection").style.display = "none";
+            }, 3000);
+        } else {
+            statusEl.innerText = "❌ " + data.message;
+            statusEl.style.color = "#f44336";
+        }
+    })
+    .catch(err => {
+        statusEl.innerText = "❌ Lỗi: " + err.message;
+        statusEl.style.color = "#f44336";
+    });
+}
