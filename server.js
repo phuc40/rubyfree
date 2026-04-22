@@ -13,7 +13,7 @@ app.use(express.json());
 app.use(express.static(__dirname));
 
 // ✨ MongoDB Connection
-const MONGODB_URI = process.env.MONGODB_URI || "mongodb+srv://busidolnew:<db_password>@cluster0.ejinj73.mongodb.net/?appName=Cluster0";
+const MONGODB_URI = process.env.MONGODB_URI || "mongodb+srv://busidolnew:<13102009@@>@cluster0.ejinj73.mongodb.net/?appName=Cluster0";
 let db;
 let usersCollection;
 let codesCollection;
