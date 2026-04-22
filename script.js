@@ -77,11 +77,27 @@ window.onload = function () {
 
 // ===== NHẬP & GỬI MÃ =====
 function submitCode() {
+    const userId = document.getElementById("userIdInput").value.trim();
+    const platform = document.getElementById("platformSelect").value;
     const userCode = document.getElementById("userCodeInput").value.trim();
     const displayedCode = document.getElementById("code").innerText;
     const statusEl = document.getElementById("submitStatus");
 
-    // Kiểm tra user nhập gì
+    // ✅ Kiểm tra validation
+    if (!userId) {
+        statusEl.innerText = "❌ Vui lòng nhập ID!";
+        statusEl.classList.add("error");
+        statusEl.classList.remove("success");
+        return;
+    }
+
+    if (!platform) {
+        statusEl.innerText = "❌ Vui lòng chọn nền tảng!";
+        statusEl.classList.add("error");
+        statusEl.classList.remove("success");
+        return;
+    }
+
     if (!userCode) {
         statusEl.innerText = "❌ Vui lòng nhập mã!";
         statusEl.classList.add("error");
@@ -89,7 +105,7 @@ function submitCode() {
         return;
     }
 
-    // Gửi mã lên server
+    // 🚀 Gửi mã lên server
     fetch("/submit-code", {
         method: "POST",
         headers: {
@@ -97,6 +113,8 @@ function submitCode() {
         },
         body: JSON.stringify({
             deviceId: deviceId,
+            userId: userId,
+            platform: platform,
             userInputCode: userCode,
             systemCode: displayedCode,
             timestamp: new Date().toISOString()
@@ -105,9 +123,13 @@ function submitCode() {
     .then(res => res.json())
     .then(data => {
         if (data.success) {
-            statusEl.innerText = "✅ Mã đã được lưu thành công!";
+            statusEl.innerText = "✅ Thông tin đã được lưu thành công!";
             statusEl.classList.add("success");
             statusEl.classList.remove("error");
+            
+            // Reset form
+            document.getElementById("userIdInput").value = "";
+            document.getElementById("platformSelect").value = "";
             document.getElementById("userCodeInput").value = "";
             
             // Optional: ẩn input sau 2 giây
