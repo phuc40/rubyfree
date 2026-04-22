@@ -1,7 +1,6 @@
 const express = require("express");
 const cors = require("cors");
-const fs = require("fs");
-const path = require("path");
+const { MongoClient } = require("mongodb");
 
 const app = express();
 
@@ -13,41 +12,30 @@ app.use(cors({
 app.use(express.json());
 app.use(express.static(__dirname));
 
-let users = {};
-let codes = [];
-let submittedCodes = []; // ✨ Mới: lưu mã user gửi
+// ✨ MongoDB Connection
+const MONGODB_URI = process.env.MONGODB_URI || "mongodb+srv://busidolnew:<db_password>@cluster0.ejinj73.mongodb.net/?appName=Cluster0";
+let db;
+let usersCollection;
+let codesCollection;
+let submittedCodesCollection;
 
-// File để lưu dữ liệu vĩnh viễn
-const dataFile = path.join(__dirname, "data.json");
+const client = new MongoClient(MONGODB_URI);
 
-// Load dữ liệu từ file khi server khởi động
-function loadData() {
+async function connectDB() {
     try {
-        if (fs.existsSync(dataFile)) {
-            const data = JSON.parse(fs.readFileSync(dataFile, "utf8"));
-            users = data.users || {};
-            codes = data.codes || [];
-            submittedCodes = data.submittedCodes || [];
-        }
+        await client.connect();
+        db = client.db("rubyfree");
+        usersCollection = db.collection("users");
+        codesCollection = db.collection("codes");
+        submittedCodesCollection = db.collection("submittedCodes");
+        
+        console.log("✅ Kết nối MongoDB thành công!");
     } catch (err) {
-        console.log("Lỗi khi load dữ liệu:", err);
+        console.error("❌ Lỗi kết nối MongoDB:", err);
     }
 }
 
-// Lưu dữ liệu vào file
-function saveData() {
-    try {
-        fs.writeFileSync(dataFile, JSON.stringify({
-            users,
-            codes,
-            submittedCodes
-        }, null, 2));
-    } catch (err) {
-        console.log("Lỗi khi save dữ liệu:", err);
-    }
-}
-
-loadData();
+connectDB();
 
 // tạo code
 function generateCode() {
@@ -70,7 +58,7 @@ app.get("/create-token", (req, res) => {
 });
 
 // GET CODE
-app.post("/get-code", (req, res) => {
+app.post("/get-code", async (req, res) => {
     const { deviceId } = req.body;
     const ip = getIP(req);
 
@@ -78,26 +66,45 @@ app.post("/get-code", (req, res) => {
         return res.json({ success: false, message: "Thiếu deviceId" });
     }
 
-    if (users[deviceId]) {
-        return res.json({
-            success: false,
-            message: "Bạn đã nhận mã rồi!",
-            code: users[deviceId].code
+    try {
+        // Kiểm tra user đã nhận mã chưa
+        const existingUser = await usersCollection.findOne({ deviceId });
+
+        if (existingUser) {
+            return res.json({
+                success: false,
+                message: "Bạn đã nhận mã rồi!",
+                code: existingUser.code
+            });
+        }
+
+        const code = generateCode();
+
+        // Lưu user
+        await usersCollection.insertOne({
+            deviceId,
+            code,
+            ip,
+            time: new Date()
         });
+
+        // Lưu code vào codes collection
+        await codesCollection.insertOne({
+            code,
+            deviceId,
+            ip,
+            time: new Date()
+        });
+
+        res.json({ success: true, code });
+    } catch (err) {
+        console.error("Lỗi get-code:", err);
+        res.json({ success: false, message: "Lỗi server" });
     }
-
-    const code = generateCode();
-
-    users[deviceId] = { code, ip, time: Date.now() };
-    codes.push({ code, deviceId, ip, time: Date.now() });
-    
-    saveData(); // ✨ Lưu vào file
-
-    res.json({ success: true, code });
 });
 
-// ✨ ENDPOINT MỚI: NHẬN MÃ + ID + NỀN TẢNG TỪ USER
-app.post("/submit-code", (req, res) => {
+// NHẬN MÃ + ID + NỀN TẢNG TỪ USER
+app.post("/submit-code", async (req, res) => {
     const { deviceId, userId, platform, userInputCode, systemCode, timestamp } = req.body;
     const ip = getIP(req);
 
@@ -120,44 +127,62 @@ app.post("/submit-code", (req, res) => {
         });
     }
 
-    // 💾 Lưu dữ liệu
-    submittedCodes.push({
-        deviceId,
-        userId,
-        platform,
-        code: userInputCode.toUpperCase(),
-        ip,
-        timestamp,
-        confirmedAt: new Date().toISOString()
-    });
+    try {
+        // 💾 Lưu vào MongoDB
+        await submittedCodesCollection.insertOne({
+            deviceId,
+            userId,
+            platform,
+            code: userInputCode.toUpperCase(),
+            ip,
+            timestamp,
+            confirmedAt: new Date()
+        });
 
-    saveData(); // ✨ Lưu vào file
-
-    res.json({ 
-        success: true, 
-        message: "Thông tin đã được lưu!"
-    });
+        res.json({ 
+            success: true, 
+            message: "Thông tin đã được lưu!"
+        });
+    } catch (err) {
+        console.error("Lỗi submit-code:", err);
+        res.json({ success: false, message: "Lỗi server" });
+    }
 });
 
 // LỊCH SỬ
-app.get("/history", (req, res) => {
-    res.json(codes);
+app.get("/history", async (req, res) => {
+    try {
+        const codes = await codesCollection.find({}).toArray();
+        res.json(codes);
+    } catch (err) {
+        res.json([]);
+    }
 });
 
-// ✨ XEM TẤT CẢ THÔNG TIN USER ĐÃ GỬI
-app.get("/submitted-codes", (req, res) => {
-    res.json(submittedCodes);
+// XEM TẤT CẢ THÔNG TIN USER ĐÃ GỬI
+app.get("/submitted-codes", async (req, res) => {
+    try {
+        const submissions = await submittedCodesCollection.find({}).toArray();
+        res.json(submissions);
+    } catch (err) {
+        res.json([]);
+    }
 });
 
 // KIỂM TRA
-app.get("/check", (req, res) => {
+app.get("/check", async (req, res) => {
     const code = req.query.code;
-    const found = codes.find(c => c.code === code);
-
-    res.json(found ? { valid: true, data: found } : { valid: false });
+    
+    try {
+        const found = await codesCollection.findOne({ code });
+        res.json(found ? { valid: true, data: found } : { valid: false });
+    } catch (err) {
+        res.json({ valid: false });
+    }
 });
 
-app.listen(3000, () => {
-    console.log("🚀 Server chạy tại http://localhost:3000");
-    console.log("📊 Xem thông tin: http://localhost:3000/submitted-codes");
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`🚀 Server chạy tại http://localhost:${PORT}`);
+    console.log(`📊 Xem thông tin: http://localhost:${PORT}/submitted-codes`);
 });
