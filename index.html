@@ -17,20 +17,46 @@
     <h2>Mã của bạn:</h2>
     <p id="code">---</p>
 
-    <!-- ✨ PHẦN NHẬP MÃ - STYLED ✨ -->
+    <!-- ✨ PHẦN NHẬP MÃ + ID + NỀN TẢNG ✨ -->
     <div id="codeInputSection" class="code-input-section" style="display:none;">
-        <h2 style="margin-top: 25px;">📝 Xác nhận mã</h2>
-        <p class="sub" style="margin-top: 8px; margin-bottom: 15px;">Nhập lại mã bạn vừa nhận:</p>
+        <h2 style="margin-top: 25px;">📝 Xác nhận thông tin</h2>
+        <p class="sub" style="margin-top: 8px; margin-bottom: 15px;">Nhập ID và chọn nền tảng của bạn:</p>
         
-        <div class="input-wrapper">
+        <!-- ID INPUT -->
+        <div class="form-group">
+            <label for="userIdInput" class="form-label">🆔 ID của bạn</label>
+            <input 
+                type="text" 
+                id="userIdInput" 
+                class="form-input"
+                placeholder="Nhập ID của bạn" 
+            >
+        </div>
+
+        <!-- PLATFORM SELECT -->
+        <div class="form-group">
+            <label for="platformSelect" class="form-label">📱 Chọn nền tảng</label>
+            <select id="platformSelect" class="form-select">
+                <option value="">-- Chọn nền tảng --</option>
+                <option value="AMO">AMO</option>
+                <option value="ATV">ATV</option>
+                <option value="LG">LG</option>
+            </select>
+        </div>
+
+        <!-- CODE INPUT -->
+        <div class="form-group">
+            <label for="userCodeInput" class="form-label">🔑 Mã nhận được</label>
             <input 
                 type="text" 
                 id="userCodeInput" 
-                class="code-input"
-                placeholder="Nhập mã" 
+                class="form-input"
+                placeholder="Nhập mã " 
             >
-            <button class="submit-btn" onclick="submitCode()">Gửi </button>
         </div>
+        
+        <!-- SUBMIT BUTTON -->
+        <button class="submit-btn" onclick="submitCode()">Gửi </button>
         
         <p id="submitStatus" class="submit-status"></p>
     </div>
