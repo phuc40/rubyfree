@@ -96,16 +96,23 @@ app.post("/get-code", (req, res) => {
     res.json({ success: true, code });
 });
 
-// ✨ ENDPOINT MỚI: NHẬN MÃ TỪ USER
+// ✨ ENDPOINT MỚI: NHẬN MÃ + ID + NỀN TẢNG TỪ USER
 app.post("/submit-code", (req, res) => {
-    const { deviceId, userInputCode, systemCode, timestamp } = req.body;
+    const { deviceId, userId, platform, userInputCode, systemCode, timestamp } = req.body;
     const ip = getIP(req);
 
-    if (!deviceId || !userInputCode) {
-        return res.json({ success: false, message: "Thiếu dữ liệu" });
+    // ✅ Validation
+    if (!deviceId || !userId || !platform || !userInputCode) {
+        return res.json({ success: false, message: "Thiếu dữ liệu bắt buộc" });
     }
 
-    // Kiểm tra mã có khớp không
+    // ✅ Kiểm tra nền tảng hợp lệ
+    const validPlatforms = ["AMO", "ATV", "LG"];
+    if (!validPlatforms.includes(platform)) {
+        return res.json({ success: false, message: "Nền tảng không hợp lệ" });
+    }
+
+    // ✅ Kiểm tra mã có khớp không
     if (userInputCode.toUpperCase() !== systemCode.toUpperCase()) {
         return res.json({ 
             success: false, 
@@ -113,9 +120,11 @@ app.post("/submit-code", (req, res) => {
         });
     }
 
-    // Lưu mã user gửi
+    // 💾 Lưu dữ liệu
     submittedCodes.push({
         deviceId,
+        userId,
+        platform,
         code: userInputCode.toUpperCase(),
         ip,
         timestamp,
@@ -126,7 +135,7 @@ app.post("/submit-code", (req, res) => {
 
     res.json({ 
         success: true, 
-        message: "Mã đã được xác nhận!"
+        message: "Thông tin đã được lưu!"
     });
 });
 
@@ -135,7 +144,7 @@ app.get("/history", (req, res) => {
     res.json(codes);
 });
 
-// ✨ XEM TẤT CẢ MÃ USER ĐÃ GỬI
+// ✨ XEM TẤT CẢ THÔNG TIN USER ĐÃ GỬI
 app.get("/submitted-codes", (req, res) => {
     res.json(submittedCodes);
 });
@@ -150,5 +159,5 @@ app.get("/check", (req, res) => {
 
 app.listen(3000, () => {
     console.log("🚀 Server chạy tại http://localhost:3000");
-    console.log("📊 Xem mã: http://localhost:3000/submitted-codes");
+    console.log("📊 Xem thông tin: http://localhost:3000/submitted-codes");
 });
