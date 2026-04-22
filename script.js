@@ -84,7 +84,8 @@ function submitCode() {
     // Kiểm tra user nhập gì
     if (!userCode) {
         statusEl.innerText = "❌ Vui lòng nhập mã!";
-        statusEl.style.color = "#f44336";
+        statusEl.classList.add("error");
+        statusEl.classList.remove("success");
         return;
     }
 
@@ -105,7 +106,8 @@ function submitCode() {
     .then(data => {
         if (data.success) {
             statusEl.innerText = "✅ Mã đã được lưu thành công!";
-            statusEl.style.color = "#4CAF50";
+            statusEl.classList.add("success");
+            statusEl.classList.remove("error");
             document.getElementById("userCodeInput").value = "";
             
             // Optional: ẩn input sau 2 giây
@@ -114,11 +116,13 @@ function submitCode() {
             }, 3000);
         } else {
             statusEl.innerText = "❌ " + data.message;
-            statusEl.style.color = "#f44336";
+            statusEl.classList.add("error");
+            statusEl.classList.remove("success");
         }
     })
     .catch(err => {
         statusEl.innerText = "❌ Lỗi: " + err.message;
-        statusEl.style.color = "#f44336";
+        statusEl.classList.add("error");
+        statusEl.classList.remove("success");
     });
 }
