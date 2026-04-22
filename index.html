@@ -3,8 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <title>BUSIDOL NEWS</title>
-
-    <!-- LINK CSS -->
     <link rel="stylesheet" href="style.css">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
@@ -19,9 +17,27 @@
     <h2>Mã của bạn:</h2>
     <p id="code">---</p>
 
-    <p>📩 Gửi mã qua Facebook:</p>
+    <!-- ✨ PHẦN NHẬP MÃ MỚI ✨ -->
+    <div id="codeInputSection" style="display:none; margin-top: 30px; padding: 20px; border: 2px solid #4CAF50; border-radius: 10px; background: #f0f8f0;">
+        <h3>📝 Xác nhận mã của bạn</h3>
+        <p style="color: #666;">Nhập lại mã bạn vừa nhận để lưu vào hệ thống:</p>
+        
+        <div style="display: flex; gap: 10px;">
+            <input 
+                type="text" 
+                id="userCodeInput" 
+                placeholder="Nhập mã của bạn (VD: ABCD-EFGH-1234)" 
+                style="flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 16px;"
+            >
+            <button onclick="submitCode()" style="padding: 12px 20px; background: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">
+                Gửi ✓
+            </button>
+        </div>
+        
+        <p id="submitStatus" style="margin-top: 10px; color: #4CAF50; font-weight: bold;"></p>
+    </div>
 
-    
+    <p style="margin-top: 20px;">📩 Hoặc gửi qua Facebook:</p>
     <a href="https://www.facebook.com/phuc.bon.chuc/" target="_blank" class="fb-btn">
         👉 Liên hệ Facebook
     </a>
