@@ -13,11 +13,12 @@ app.use(express.json());
 app.use(express.static(__dirname));
 
 // ✨ MongoDB Connection
-const MONGODB_URI = process.env.MONGODB_URI || "mongodb+srv://busidolnew:<busidolnew>@cluster0.ejinj73.mongodb.net/?appName=Cluster0";
+const MONGODB_URI = process.env.MONGODB_URI || "mongodb+srv://busidolnew:busidolnew@cluster0.ejinj73.mongodb.net/?appName=Cluster0";
 let db;
 let usersCollection;
 let codesCollection;
 let submittedCodesCollection;
+let dbReady = false; // ✨ Flag để check connection
 
 const client = new MongoClient(MONGODB_URI);
 
@@ -29,13 +30,27 @@ async function connectDB() {
         codesCollection = db.collection("codes");
         submittedCodesCollection = db.collection("submittedCodes");
         
+        dbReady = true; // ✨ Set flag = true khi connect xong
         console.log("✅ Kết nối MongoDB thành công!");
     } catch (err) {
         console.error("❌ Lỗi kết nối MongoDB:", err);
+        dbReady = false;
     }
 }
 
 connectDB();
+
+// ✨ MIDDLEWARE: Chờ database ready trước khi process request
+async function waitForDB() {
+    let retries = 0;
+    while (!dbReady && retries < 30) {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        retries++;
+    }
+    if (!dbReady) {
+        throw new Error("Database connection timeout");
+    }
+}
 
 // tạo code
 function generateCode() {
@@ -59,14 +74,16 @@ app.get("/create-token", (req, res) => {
 
 // GET CODE
 app.post("/get-code", async (req, res) => {
-    const { deviceId } = req.body;
-    const ip = getIP(req);
-
-    if (!deviceId) {
-        return res.json({ success: false, message: "Thiếu deviceId" });
-    }
-
     try {
+        await waitForDB(); // ✨ Chờ database ready
+        
+        const { deviceId } = req.body;
+        const ip = getIP(req);
+
+        if (!deviceId) {
+            return res.json({ success: false, message: "Thiếu deviceId" });
+        }
+
         // Kiểm tra user đã nhận mã chưa
         const existingUser = await usersCollection.findOne({ deviceId });
 
@@ -99,35 +116,37 @@ app.post("/get-code", async (req, res) => {
         res.json({ success: true, code });
     } catch (err) {
         console.error("Lỗi get-code:", err);
-        res.json({ success: false, message: "Lỗi server" });
+        res.json({ success: false, message: "Lỗi server: " + err.message });
     }
 });
 
 // NHẬN MÃ + ID + NỀN TẢNG TỪ USER
 app.post("/submit-code", async (req, res) => {
-    const { deviceId, userId, platform, userInputCode, systemCode, timestamp } = req.body;
-    const ip = getIP(req);
-
-    // ✅ Validation
-    if (!deviceId || !userId || !platform || !userInputCode) {
-        return res.json({ success: false, message: "Thiếu dữ liệu bắt buộc" });
-    }
-
-    // ✅ Kiểm tra nền tảng hợp lệ
-    const validPlatforms = ["AMO", "ATV", "LG"];
-    if (!validPlatforms.includes(platform)) {
-        return res.json({ success: false, message: "Nền tảng không hợp lệ" });
-    }
-
-    // ✅ Kiểm tra mã có khớp không
-    if (userInputCode.toUpperCase() !== systemCode.toUpperCase()) {
-        return res.json({ 
-            success: false, 
-            message: "Mã không khớp! Vui lòng kiểm tra lại." 
-        });
-    }
-
     try {
+        await waitForDB(); // ✨ Chờ database ready
+        
+        const { deviceId, userId, platform, userInputCode, systemCode, timestamp } = req.body;
+        const ip = getIP(req);
+
+        // ✅ Validation
+        if (!deviceId || !userId || !platform || !userInputCode) {
+            return res.json({ success: false, message: "Thiếu dữ liệu bắt buộc" });
+        }
+
+        // ✅ Kiểm tra nền tảng hợp lệ
+        const validPlatforms = ["AMO", "ATV", "LG"];
+        if (!validPlatforms.includes(platform)) {
+            return res.json({ success: false, message: "Nền tảng không hợp lệ" });
+        }
+
+        // ✅ Kiểm tra mã có khớp không
+        if (userInputCode.toUpperCase() !== systemCode.toUpperCase()) {
+            return res.json({ 
+                success: false, 
+                message: "Mã không khớp! Vui lòng kiểm tra lại." 
+            });
+        }
+
         // 💾 Lưu vào MongoDB
         await submittedCodesCollection.insertOne({
             deviceId,
@@ -145,13 +164,14 @@ app.post("/submit-code", async (req, res) => {
         });
     } catch (err) {
         console.error("Lỗi submit-code:", err);
-        res.json({ success: false, message: "Lỗi server" });
+        res.json({ success: false, message: "Lỗi server: " + err.message });
     }
 });
 
 // LỊCH SỬ
 app.get("/history", async (req, res) => {
     try {
+        await waitForDB(); // ✨ Chờ database ready
         const codes = await codesCollection.find({}).toArray();
         res.json(codes);
     } catch (err) {
@@ -162,6 +182,7 @@ app.get("/history", async (req, res) => {
 // XEM TẤT CẢ THÔNG TIN USER ĐÃ GỬI
 app.get("/submitted-codes", async (req, res) => {
     try {
+        await waitForDB(); // ✨ Chờ database ready
         const submissions = await submittedCodesCollection.find({}).toArray();
         res.json(submissions);
     } catch (err) {
@@ -171,9 +192,9 @@ app.get("/submitted-codes", async (req, res) => {
 
 // KIỂM TRA
 app.get("/check", async (req, res) => {
-    const code = req.query.code;
-    
     try {
+        await waitForDB(); // ✨ Chờ database ready
+        const code = req.query.code;
         const found = await codesCollection.findOne({ code });
         res.json(found ? { valid: true, data: found } : { valid: false });
     } catch (err) {
