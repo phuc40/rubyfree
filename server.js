@@ -13,12 +13,12 @@ app.use(express.json());
 app.use(express.static(__dirname));
 
 // ✨ MongoDB Connection
-const MONGODB_URI = process.env.MONGODB_URI || "mongodb+srv://busidolnew:busidolnew@cluster0.ejinj73.mongodb.net/?appName=Cluster0";
+const MONGODB_URI = process.env.MONGODB_URI || "mongodb+srv://busidolnew:busidol123@cluster0.ejinj73.mongodb.net/?appName=Cluster0";
 let db;
 let usersCollection;
 let codesCollection;
 let submittedCodesCollection;
-let dbReady = false; // ✨ Flag để check connection
+let dbReady = false;
 
 const client = new MongoClient(MONGODB_URI);
 
@@ -30,7 +30,7 @@ async function connectDB() {
         codesCollection = db.collection("codes");
         submittedCodesCollection = db.collection("submittedCodes");
         
-        dbReady = true; // ✨ Set flag = true khi connect xong
+        dbReady = true;
         console.log("✅ Kết nối MongoDB thành công!");
     } catch (err) {
         console.error("❌ Lỗi kết nối MongoDB:", err);
@@ -40,7 +40,7 @@ async function connectDB() {
 
 connectDB();
 
-// ✨ MIDDLEWARE: Chờ database ready trước khi process request
+// ✨ Chờ database ready trước khi process request
 async function waitForDB() {
     let retries = 0;
     while (!dbReady && retries < 30) {
@@ -52,7 +52,7 @@ async function waitForDB() {
     }
 }
 
-// tạo code
+// Tạo code random
 function generateCode() {
     const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
     let code = "";
@@ -75,7 +75,7 @@ app.get("/create-token", (req, res) => {
 // GET CODE
 app.post("/get-code", async (req, res) => {
     try {
-        await waitForDB(); // ✨ Chờ database ready
+        await waitForDB();
         
         const { deviceId } = req.body;
         const ip = getIP(req);
@@ -123,23 +123,23 @@ app.post("/get-code", async (req, res) => {
 // NHẬN MÃ + ID + NỀN TẢNG TỪ USER
 app.post("/submit-code", async (req, res) => {
     try {
-        await waitForDB(); // ✨ Chờ database ready
+        await waitForDB();
         
         const { deviceId, userId, platform, userInputCode, systemCode, timestamp } = req.body;
         const ip = getIP(req);
 
-        // ✅ Validation
+        // Validation
         if (!deviceId || !userId || !platform || !userInputCode) {
             return res.json({ success: false, message: "Thiếu dữ liệu bắt buộc" });
         }
 
-        // ✅ Kiểm tra nền tảng hợp lệ
+        // Kiểm tra nền tảng hợp lệ
         const validPlatforms = ["AMO", "ATV", "LG"];
         if (!validPlatforms.includes(platform)) {
             return res.json({ success: false, message: "Nền tảng không hợp lệ" });
         }
 
-        // ✅ Kiểm tra mã có khớp không
+        // Kiểm tra mã có khớp không
         if (userInputCode.toUpperCase() !== systemCode.toUpperCase()) {
             return res.json({ 
                 success: false, 
@@ -147,7 +147,7 @@ app.post("/submit-code", async (req, res) => {
             });
         }
 
-        // 💾 Lưu vào MongoDB
+        // Lưu vào MongoDB
         await submittedCodesCollection.insertOne({
             deviceId,
             userId,
@@ -168,10 +168,10 @@ app.post("/submit-code", async (req, res) => {
     }
 });
 
-// LỊCH SỬ
+// Xem lịch sử
 app.get("/history", async (req, res) => {
     try {
-        await waitForDB(); // ✨ Chờ database ready
+        await waitForDB();
         const codes = await codesCollection.find({}).toArray();
         res.json(codes);
     } catch (err) {
@@ -179,10 +179,10 @@ app.get("/history", async (req, res) => {
     }
 });
 
-// XEM TẤT CẢ THÔNG TIN USER ĐÃ GỬI
+// Xem tất cả thông tin user đã gửi
 app.get("/submitted-codes", async (req, res) => {
     try {
-        await waitForDB(); // ✨ Chờ database ready
+        await waitForDB();
         const submissions = await submittedCodesCollection.find({}).toArray();
         res.json(submissions);
     } catch (err) {
@@ -190,10 +190,10 @@ app.get("/submitted-codes", async (req, res) => {
     }
 });
 
-// KIỂM TRA
+// Kiểm tra mã
 app.get("/check", async (req, res) => {
     try {
-        await waitForDB(); // ✨ Chờ database ready
+        await waitForDB();
         const code = req.query.code;
         const found = await codesCollection.findOne({ code });
         res.json(found ? { valid: true, data: found } : { valid: false });
