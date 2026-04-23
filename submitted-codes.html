@@ -282,7 +282,7 @@
 <script>
     async function loadData() {
         try {
-            const response = await fetch('/submitted-codes');
+            const response = await fetch('/submitted-codes-api');
             const data = await response.json();
 
             const tableBody = document.getElementById('tableBody');
