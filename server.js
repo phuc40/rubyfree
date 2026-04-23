@@ -180,7 +180,7 @@ app.get("/history", async (req, res) => {
 });
 
 // Xem tất cả thông tin user đã gửi
-app.get("/submitted-codes", async (req, res) => {
+app.get("/submitted-codes-api", async (req, res) => {
     try {
         await waitForDB();
         const submissions = await submittedCodesCollection.find({}).toArray();
@@ -188,6 +188,10 @@ app.get("/submitted-codes", async (req, res) => {
     } catch (err) {
         res.json([]);
     }
+});
+
+app.get("/submitted-codes", (req, res) => {
+    res.sendFile(__dirname + "/submitted-codes.html");
 });
 
 // Kiểm tra mã
