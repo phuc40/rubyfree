@@ -15,7 +15,7 @@ function getReward() {
         localStorage.setItem("start_time", Date.now());
 
         // đi link4m
-        window.location.href = "https://link4m.com/7ZmOsy";
+        window.location.href = "https://link4m.com/6bAEoB2";
     });
 }
 
