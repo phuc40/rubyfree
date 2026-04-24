@@ -1,5 +1,6 @@
+
 <!DOCTYPE html>
-<html>
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
     <title>Event Ruby</title>
@@ -17,25 +18,18 @@
     <h2>Mã của bạn:</h2>
     <p id="code">---</p>
 
-    <!-- ✨ PHẦN NHẬP MÃ + ID + NỀN TẢNG ✨ -->
+    <!-- FORM -->
     <div id="codeInputSection" class="code-input-section" style="display:none;">
-        <h2 style="margin-top: 25px;">📝 Xác nhận thông tin</h2>
-        <p class="sub" style="margin-top: 8px; margin-bottom: 15px;">Nhập ID và chọn nền tảng của bạn:</p>
-        
-        <!-- ID INPUT -->
+        <h2>📝 Xác nhận thông tin</h2>
+        <p class="sub">Nhập ID và chọn nền tảng của bạn:</p>
+
         <div class="form-group">
-            <label for="userIdInput" class="form-label">🆔 ID của bạn</label>
-            <input 
-                type="text" 
-                id="userIdInput" 
-                class="form-input"
-                placeholder="Nhập ID của bạn" 
-            >
+            <label class="form-label">🆔 ID của bạn</label>
+            <input type="text" id="userIdInput" class="form-input" placeholder="Nhập ID">
         </div>
 
-        <!-- PLATFORM SELECT -->
         <div class="form-group">
-            <label for="platformSelect" class="form-label">📱 Chọn nền tảng</label>
+            <label class="form-label">📱 Nền tảng</label>
             <select id="platformSelect" class="form-select">
                 <option value="">-- Chọn nền tảng --</option>
                 <option value="AMO">AMO</option>
@@ -44,29 +38,48 @@
             </select>
         </div>
 
-        <!-- CODE INPUT -->
         <div class="form-group">
-            <label for="userCodeInput" class="form-label">🔑 Mã nhận được</label>
-            <input 
-                type="text" 
-                id="userCodeInput" 
-                class="form-input"
-                placeholder="Nhập mã " 
-            >
+            <label class="form-label">🔑 Mã nhận được</label>
+            <input type="text" id="userCodeInput" class="form-input" placeholder="Nhập mã">
         </div>
-        
-        <!-- SUBMIT BUTTON -->
-        <button class="submit-btn" onclick="submitCode()">Gửi </button>
-        
+
+        <button class="submit-btn" onclick="submitCode()">Gửi</button>
         <p id="submitStatus" class="submit-status"></p>
     </div>
 
-    <p class="sub" style="margin-top: 20px;">Liên Hệ Qua Discord </p>
+    <!-- DISCORD -->
+    <p class="sub" style="margin-top:20px;">Liên hệ qua Discord</p>
     <a href="https://discord.com/users/1201014400350429284" target="_blank" class="fb-btn">
         hfmgcg_04859
     </a>
+
+    <!-- NÚT BẢNG GIÁ -->
+    <button class="open-price-btn" onclick="openPrice()">💰 Bảng Giá El Dorado</button>
 </div>
 
-<script src="script.js"></script>
+<!-- POPUP -->
+<div id="priceModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closePrice()">&times;</span>
+
+        <h2>💰 Bảng giá vật phẩm El Dorado AMO,ATV,LG</h2>
+
+        <table class="price-table">
+            <tr>
+                <th>Giá</th>
+                <th>Vật phẩm</th>
+            </tr>
+            <tr><td>20k</td><td>Random 8 sao (Trừ Thần)</td></tr>
+            <tr><td>50k</td><td>Tự chọn 8 sao Level 90 (Trừ Thần)</td></tr>
+            <tr><td>100k</td><td>Tự chọn 8 sao Level 110 (Trừ Thần)</td></tr>
+            <tr><td>50k</td><td>8000 Ruby</td></tr>
+            <tr><td>50k</td><td>1 Item A</td></tr>
+            <tr><td>50k</td><td>Reset Map 1 lần</td></tr>
+        </table>
+    </div>
+</div>
+
+<script src="obfuscated.js"></script>
+
 </body>
 </html>
