@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -24,7 +23,7 @@
         <p class="sub">Nhập ID và chọn nền tảng của bạn:</p>
 
         <div class="form-group">
-            <label class="form-label">🆔 ID của bạn (Nếu Đã Xác Minh Email Vui Lòng Gửi ID và Mã Qua Discord)</label>
+            <label class="form-label">🆔 ID của bạn</label>
             <input type="text" id="userIdInput" class="form-input" placeholder="Nhập ID">
         </div>
 
@@ -47,27 +46,31 @@
         <p id="submitStatus" class="submit-status"></p>
     </div>
 
-    <!-- SOCIAL BUTTONS -->
+    <!-- SOCIAL -->
     <div class="social-buttons">
-    <a href="https://discord.com/users/1201014400350429284" target="_blank" class="social-btn">
-        💬 Discord
-    </a>
+        <a href="https://discord.com/users/1201014400350429284" target="_blank" class="social-btn">
+            💬 Discord
+        </a>
 
-    <a href="https://youtube.com/@SnakeGTD" target="_blank" class="social-btn youtube">
-        ▶ YouTube
-    </a>
-</div>
+        <a href="https://youtube.com/@SnakeGTD" target="_blank" class="social-btn youtube">
+            ▶ YouTube
+        </a>
+    </div>
 
     <!-- NÚT BẢNG GIÁ -->
     <button class="open-price-btn" onclick="openPrice()">💰 Bảng Giá El Dorado</button>
+
+    <!-- NÚT VÒNG QUAY (NGAY DƯỚI) -->
+    <button class="open-wheel-btn" onclick="openWheel()">🎯 Vòng quay may mắn</button>
+
 </div>
 
-<!-- POPUP -->
+<!-- POPUP BẢNG GIÁ -->
 <div id="priceModal" class="modal">
     <div class="modal-content">
         <span class="close" onclick="closePrice()">&times;</span>
 
-        <h2>💰 Bảng giá vật phẩm El Dorado AMO,ATV,LG</h2>
+        <h2>💰 Bảng giá vật phẩm El Dorado AMO, ATV, LG</h2>
 
         <table class="price-table">
             <tr>
@@ -81,6 +84,25 @@
             <tr><td>50k</td><td>1 Item A</td></tr>
             <tr><td>50k</td><td>Reset Map 1 lần</td></tr>
         </table>
+    </div>
+</div>
+
+<!-- POPUP VÒNG QUAY -->
+<div id="wheelModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeWheel()">&times;</span>
+
+        <h2>🎯 Vòng quay may mắn</h2>
+
+        <div class="wheel-container">
+
+    <div id="wheel" class="wheel"></div>
+
+    <button class="spin-btn" onclick="spinWheel()">Quay</button>
+</div>
+
+        <p id="result" class="result-text"></p>
+        <p id="cooldown" class="cooldown-text"></p>
     </div>
 </div>
 
