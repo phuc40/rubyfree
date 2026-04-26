@@ -1,4 +1,4 @@
-// ===== TẠO DEVICE ID =====
+// ================= DEVICE ID =================
 let deviceId = localStorage.getItem("deviceId");
 
 if (!deviceId) {
@@ -6,7 +6,7 @@ if (!deviceId) {
     localStorage.setItem("deviceId", deviceId);
 }
 
-// ===== BẤM NÚT =====
+// ================= NHẬN MÃ =================
 function getReward() {
     fetch("/create-token")
     .then(res => res.json())
@@ -14,12 +14,11 @@ function getReward() {
         localStorage.setItem("reward_token", data.token);
         localStorage.setItem("start_time", Date.now());
 
-        // đi link4m
         window.location.href = "https://link4m.com/6bAEoB2";
     });
 }
 
-// ===== QUAY LẠI =====
+// ================= LOAD LẠI =================
 window.onload = function () {
     const token = localStorage.getItem("reward_token");
     const start = localStorage.getItem("start_time");
@@ -28,13 +27,8 @@ window.onload = function () {
 
     const now = Date.now();
 
-    // ❌ quay lại quá nhanh
-    if (now - start < 15000) {
-        console.log("Chưa đủ thời gian");
-        return;
-    }
+    if (now - start < 15000) return;
 
-    // ❌ quá lâu -> reset
     if (now - start > 120000) {
         localStorage.removeItem("reward_token");
         localStorage.removeItem("start_time");
@@ -43,9 +37,7 @@ window.onload = function () {
 
     fetch("/get-code", {
         method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
+        headers: {"Content-Type": "application/json"},
         body: JSON.stringify({
             deviceId: deviceId,
             token: token
@@ -55,27 +47,21 @@ window.onload = function () {
     .then(data => {
         if (data.success) {
             document.getElementById("code").innerText = data.code;
-            
-            // ✨ Hiển thị phần nhập mã
             document.getElementById("codeInputSection").style.display = "block";
-            
-            alert("🎁 Mã của bạn: " + data.code);
         } else {
-            alert(data.message);
             if (data.code) {
                 document.getElementById("code").innerText = data.code;
-                // ✨ Hiển thị phần nhập mã ngay cả khi user đã nhận trước đó
                 document.getElementById("codeInputSection").style.display = "block";
             }
+            alert(data.message);
         }
     });
 
-    // xoá token sau khi dùng
     localStorage.removeItem("reward_token");
     localStorage.removeItem("start_time");
 };
 
-// ===== NHẬP & GỬI MÃ =====
+// ================= GỬI CODE =================
 function submitCode() {
     const userId = document.getElementById("userIdInput").value.trim();
     const platform = document.getElementById("platformSelect").value;
@@ -83,38 +69,17 @@ function submitCode() {
     const displayedCode = document.getElementById("code").innerText;
     const statusEl = document.getElementById("submitStatus");
 
-    // ✅ Kiểm tra validation
-    if (!userId) {
-        statusEl.innerText = "❌ Vui lòng nhập ID!";
-        statusEl.classList.add("error");
-        statusEl.classList.remove("success");
-        return;
-    }
+    if (!userId) return showError("❌ Vui lòng nhập ID!");
+    if (!platform) return showError("❌ Vui lòng chọn nền tảng!");
+    if (!userCode) return showError("❌ Vui lòng nhập mã!");
 
-    if (!platform) {
-        statusEl.innerText = "❌ Vui lòng chọn nền tảng!";
-        statusEl.classList.add("error");
-        statusEl.classList.remove("success");
-        return;
-    }
-
-    if (!userCode) {
-        statusEl.innerText = "❌ Vui lòng nhập mã!";
-        statusEl.classList.add("error");
-        statusEl.classList.remove("success");
-        return;
-    }
-
-    // 🚀 Gửi mã lên server
     fetch("/submit-code", {
         method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
+        headers: {"Content-Type": "application/json"},
         body: JSON.stringify({
-            deviceId: deviceId,
-            userId: userId,
-            platform: platform,
+            deviceId,
+            userId,
+            platform,
             userInputCode: userCode,
             systemCode: displayedCode,
             timestamp: new Date().toISOString()
@@ -123,28 +88,132 @@ function submitCode() {
     .then(res => res.json())
     .then(data => {
         if (data.success) {
-            statusEl.innerText = "✅ Thông tin đã được lưu thành công!";
-            statusEl.classList.add("success");
-            statusEl.classList.remove("error");
-            
-            // Reset form
+            statusEl.innerText = "✅ Thành công!";
+            statusEl.className = "submit-status success";
+
             document.getElementById("userIdInput").value = "";
             document.getElementById("platformSelect").value = "";
             document.getElementById("userCodeInput").value = "";
-            
-            // Optional: ẩn input sau 2 giây
-            setTimeout(() => {
-                document.getElementById("codeInputSection").style.display = "none";
-            }, 3000);
+
         } else {
-            statusEl.innerText = "❌ " + data.message;
-            statusEl.classList.add("error");
-            statusEl.classList.remove("success");
+            showError("❌ " + data.message);
         }
     })
-    .catch(err => {
-        statusEl.innerText = "❌ Lỗi: " + err.message;
-        statusEl.classList.add("error");
-        statusEl.classList.remove("success");
+    .catch(err => showError("❌ Lỗi: " + err.message));
+
+    function showError(msg){
+        statusEl.innerText = msg;
+        statusEl.className = "submit-status error";
+    }
+}
+
+// ================= POPUP =================
+function openPrice() {
+    document.getElementById("priceModal").style.display = "flex";
+}
+function closePrice() {
+    document.getElementById("priceModal").style.display = "none";
+}
+
+function openWheel() {
+    document.getElementById("wheelModal").style.display = "flex";
+}
+function closeWheel() {
+    document.getElementById("wheelModal").style.display = "none";
+}
+
+// đóng popup khi click ngoài
+window.addEventListener("click", function(e) {
+    if (e.target.classList.contains("modal")) {
+        e.target.style.display = "none";
+    }
+});
+
+// ================= VÒNG QUAY =================
+
+// tên hiển thị
+const characters = [
+    "Ace","Echo","Smart","Khan","Lucy Băng","Lucy Idol",
+    "Ruby","Bensi","Gin","Jey","Koo","Thrue","Bebee","Gold"
+];
+
+// tên file ảnh
+const characterImages = [
+    "ace","echo","smart","khan","lucy_bang","lucy_idol",
+    "ruby","bensi","gin","jey","koo","thrue","bebee","gold"
+];
+
+let currentRotation = 0;
+
+// tạo item ảnh
+function createWheelItems() {
+    const wheel = document.getElementById("wheel");
+    wheel.innerHTML = "";
+
+    const total = characterImages.length;
+    const radius = 95;
+
+    characterImages.forEach((char, index) => {
+        const angle = index * (360 / total);
+
+        const item = document.createElement("div");
+        item.className = "wheel-item";
+
+        item.style.transform = `
+            rotate(${angle}deg)
+            translate(${radius}px)
+            translate(-50%, -50%)
+        `;
+
+        item.innerHTML = `<img src="./images/${char}.png">`;
+        wheel.appendChild(item);
     });
 }
+
+// ===== 🎯 SPIN (SERVER) =====
+function spinWheel() {
+    const wheel = document.getElementById("wheel");
+    const resultText = document.getElementById("result");
+    const cooldownText = document.getElementById("cooldown");
+
+    fetch("/spin-wheel", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ deviceId })
+    })
+    .then(res => res.json())
+    .then(data => {
+
+        if (!data.success) {
+            if (data.remain) {
+                const h = Math.floor(data.remain / 3600000);
+                const m = Math.floor((data.remain % 3600000) / 60000);
+                cooldownText.innerText = `⏳ Chờ ${h}h ${m}p`;
+            } else {
+                alert(data.message);
+            }
+            return;
+        }
+
+        const result = data.result;
+
+        const index = characters.indexOf(result);
+        const angle = 360 / characters.length;
+
+        const rotateTo = 360 * 5 + (index * angle);
+        currentRotation += rotateTo;
+
+        wheel.style.transform = `rotate(${currentRotation}deg)`;
+
+        cooldownText.innerText = "";
+
+        setTimeout(() => {
+            resultText.innerText = "🎉 Bạn trúng: " + result;
+        }, 4000);
+    });
+}
+
+// ===== INIT =====
+window.addEventListener("load", () => {
+    createWheelItems();
+});
