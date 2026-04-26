@@ -236,6 +236,32 @@ async function startServer() {
 
         console.log("✅ MongoDB connected");
 
+        // ================= 🔥 ANTI-SPAM INDEX =================
+
+        // chỉ index khi field tồn tại (tránh null lỗi)
+        await submittedCodesCollection.createIndex(
+            { deviceId: 1 },
+            { unique: true, sparse: true }
+        );
+
+        await submittedCodesCollection.createIndex(
+            { ip: 1 },
+            { unique: true, sparse: true }
+        );
+
+        await submittedCodesCollection.createIndex(
+            { userAgent: 1 },
+            { unique: true, sparse: true }
+        );
+
+        await submittedCodesCollection.createIndex(
+            { fingerprint: 1 },
+            { unique: true, sparse: true }
+        );
+
+        console.log("🔥 Anti-spam index ready");
+
+        // ================= START SERVER =================
         const PORT = process.env.PORT || 3000;
         app.listen(PORT, () => {
             console.log(`🚀 Server chạy tại http://localhost:${PORT}`);
