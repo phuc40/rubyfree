@@ -16,7 +16,7 @@ app.use(express.json());
 app.use(express.static(__dirname));
 
 // ===== MongoDB =====
-const MONGODB_URI = process.env.MONGODB_URI || 
+const MONGODB_URI = process.env.MONGODB_URI ||
 "mongodb+srv://busidolnew:busidol123@cluster0.ejinj73.mongodb.net/rubyfree?retryWrites=true&w=majority";
 
 let db;
@@ -142,14 +142,23 @@ app.post("/submit-code", async (req, res) => {
     }
 });
 
-// ===== 🎯 SPIN WHEEL (KHÓA IP) =====
+// ===== 🎯 SPIN WHEEL (KHÓA CỨNG) =====
 app.post("/spin-wheel", async (req, res) => {
     try {
         const ip = getRealIP(req);
+        const { deviceId, fingerprint } = req.body;
+
+        if (!deviceId && !fingerprint) {
+            return res.json({ success: false, message: "Thiếu định danh" });
+        }
+
         const now = Date.now();
         const cooldown = 6 * 60 * 60 * 1000;
 
-        const existing = await spinsCollection.findOne({ ip });
+        // 🔥 KEY DUY NHẤT (quan trọng nhất)
+        const key = fingerprint || deviceId || ip;
+
+        const existing = await spinsCollection.findOne({ key });
 
         if (existing) {
             const diff = now - existing.lastSpin;
@@ -158,7 +167,7 @@ app.post("/spin-wheel", async (req, res) => {
                 return res.json({
                     success: false,
                     remain: cooldown - diff,
-                    message: "Quay Rồi Má"
+                    message: "Bạn đã quay rồi!"
                 });
             }
         }
@@ -171,14 +180,13 @@ app.post("/spin-wheel", async (req, res) => {
         const result = characters[Math.floor(Math.random() * characters.length)];
 
         await spinsCollection.updateOne(
-            { $or: [
-                    { ip },
-                    { deviceId },
-                    { fingerprint }
-                ] },
+            { key },
             {
                 $set: {
+                    key,
                     ip,
+                    deviceId,
+                    fingerprint,
                     lastSpin: now,
                     lastResult: result
                 }
@@ -206,16 +214,16 @@ async function startServer() {
         submittedCodesCollection = db.collection("submittedCodes");
         spinsCollection = db.collection("spins");
 
-        // 🔥 FIX INDEX (KHÔNG BỊ LỖI NỮA)
+        // 🔥 FIX INDEX AN TOÀN
         const indexes = await spinsCollection.indexes();
-        const hasIPIndex = indexes.find(i => i.name === "unique_ip_index");
+        const hasKeyIndex = indexes.find(i => i.name === "unique_key_index");
 
-        if (!hasIPIndex) {
+        if (!hasKeyIndex) {
             await spinsCollection.createIndex(
-                { ip: 1 },
-                { unique: true, name: "unique_ip_index" }
+                { key: 1 },
+                { unique: true, name: "unique_key_index" }
             );
-            console.log("✅ Created unique_ip_index");
+            console.log("✅ Created unique_key_index");
         }
 
         console.log("✅ MongoDB connected");
