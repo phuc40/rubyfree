@@ -170,6 +170,15 @@ function createWheelItems() {
     });
 }
 
+function getFingerprint() {
+    return btoa(
+        navigator.userAgent +
+        screen.width +
+        screen.height +
+        navigator.language
+    );
+}
+
 // ===== 🎯 SPIN (SERVER) =====
 function spinWheel() {
     const wheel = document.getElementById("wheel");
