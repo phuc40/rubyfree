@@ -4,7 +4,7 @@ const { MongoClient } = require("mongodb");
 
 const app = express();
 
-// 🔥 QUAN TRỌNG: để lấy IP thật khi deploy
+// 🔥 QUAN TRỌNG khi deploy (Render/Vercel)
 app.set("trust proxy", true);
 
 app.use(cors({
@@ -16,7 +16,8 @@ app.use(express.json());
 app.use(express.static(__dirname));
 
 // ===== MongoDB =====
-const MONGODB_URI = process.env.MONGODB_URI || "mongodb+srv://busidolnew:busidol123@cluster0.ejinj73.mongodb.net/?appName=Cluster0";
+const MONGODB_URI = process.env.MONGODB_URI || 
+"mongodb+srv://busidolnew:busidol123@cluster0.ejinj73.mongodb.net/rubyfree?retryWrites=true&w=majority";
 
 let db;
 let usersCollection;
@@ -24,53 +25,18 @@ let codesCollection;
 let submittedCodesCollection;
 let spinsCollection;
 
-let dbReady = false;
-
 const client = new MongoClient(MONGODB_URI);
-
-async function connectDB() {
-    try {
-        await client.connect();
-        db = client.db("rubyfree");
-
-        usersCollection = db.collection("users");
-        codesCollection = db.collection("codes");
-        submittedCodesCollection = db.collection("submittedCodes");
-        spinsCollection = db.collection("spins");
-
-        // 🔒 KHÓA CỨNG IP (1 IP chỉ có 1 record)
-        await spinsCollection.createIndex({ ip: 1 }, { unique: true });
-
-        dbReady = true;
-        console.log("✅ MongoDB connected");
-    } catch (err) {
-        console.error("❌ MongoDB error:", err);
-        dbReady = false;
-    }
-}
-connectDB();
-
-// ===== WAIT DB =====
-async function waitForDB() {
-    let retries = 0;
-    while (!dbReady && retries < 30) {
-        await new Promise(r => setTimeout(r, 1000));
-        retries++;
-    }
-    if (!dbReady) throw new Error("DB timeout");
-}
 
 // ===== LẤY IP CHUẨN =====
 function getRealIP(req) {
     let ip =
-        req.headers["cf-connecting-ip"] || // Cloudflare
+        req.headers["cf-connecting-ip"] ||
         req.headers["x-forwarded-for"]?.split(",")[0] ||
         req.ip ||
         req.socket.remoteAddress;
 
     if (!ip) return "unknown";
 
-    // fix IPv6 dạng ::ffff:127.0.0.1
     if (ip.startsWith("::ffff:")) {
         ip = ip.replace("::ffff:", "");
     }
@@ -98,8 +64,6 @@ app.get("/create-token", (req, res) => {
 // ===== GET CODE =====
 app.post("/get-code", async (req, res) => {
     try {
-        await waitForDB();
-
         const { deviceId } = req.body;
         const ip = getRealIP(req);
 
@@ -144,8 +108,6 @@ app.post("/get-code", async (req, res) => {
 // ===== SUBMIT CODE =====
 app.post("/submit-code", async (req, res) => {
     try {
-        await waitForDB();
-
         const { deviceId, userId, platform, userInputCode, systemCode, timestamp } = req.body;
         const ip = getRealIP(req);
 
@@ -180,11 +142,9 @@ app.post("/submit-code", async (req, res) => {
     }
 });
 
-// ===== 🎯 SPIN WHEEL (KHÓA CỨNG IP) =====
+// ===== 🎯 SPIN WHEEL (KHÓA IP CỨNG) =====
 app.post("/spin-wheel", async (req, res) => {
     try {
-        await waitForDB();
-
         const ip = getRealIP(req);
         const now = Date.now();
         const cooldown = 6 * 60 * 60 * 1000;
@@ -198,32 +158,11 @@ app.post("/spin-wheel", async (req, res) => {
                 return res.json({
                     success: false,
                     remain: cooldown - diff,
-                    message: "Ai Cho Quay Vậy"
+                    message: "Quay Rồi Má"
                 });
             }
-
-            // hết cooldown → quay lại
-            const characters = [
-                "Ace","Echo","Smart","Khan","Lucy Băng","Lucy Idol",
-                "Ruby","Bensi","Gin","Jey","Koo","Thrue","Bebee","Gold"
-            ];
-
-            const result = characters[Math.floor(Math.random() * characters.length)];
-
-            await spinsCollection.updateOne(
-                { ip },
-                {
-                    $set: {
-                        lastSpin: now,
-                        lastResult: result
-                    }
-                }
-            );
-
-            return res.json({ success: true, result });
         }
 
-        // 👉 lần đầu
         const characters = [
             "Ace","Echo","Smart","Khan","Lucy Băng","Lucy Idol",
             "Ruby","Bensi","Gin","Jey","Koo","Thrue","Bebee","Gold"
@@ -231,30 +170,52 @@ app.post("/spin-wheel", async (req, res) => {
 
         const result = characters[Math.floor(Math.random() * characters.length)];
 
-        await spinsCollection.insertOne({
-            ip,
-            lastSpin: now,
-            lastResult: result
-        });
+        await spinsCollection.updateOne(
+            { ip },
+            {
+                $set: {
+                    ip,
+                    lastSpin: now,
+                    lastResult: result
+                }
+            },
+            { upsert: true }
+        );
 
         res.json({ success: true, result });
 
     } catch (err) {
-        // 🔥 chặn insert trùng IP
-        if (err.code === 11000) {
-            return res.json({
-                success: false,
-                message: "Ai Cho Quay Vậy"
-            });
-        }
-
         console.error("spin-wheel:", err);
         res.json({ success: false, message: "Lỗi server" });
     }
 });
 
-// ===== START =====
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`🚀 Server chạy tại http://localhost:${PORT}`);
-});
+// ===== START SERVER (QUAN TRỌNG) =====
+async function startServer() {
+    try {
+        await client.connect();
+
+        db = client.db("rubyfree");
+
+        usersCollection = db.collection("users");
+        codesCollection = db.collection("codes");
+        submittedCodesCollection = db.collection("submittedCodes");
+        spinsCollection = db.collection("spins");
+
+        // 🔒 1 IP = 1 record
+        await spinsCollection.createIndex({ ip: 1 }, { unique: true });
+
+        console.log("✅ MongoDB connected");
+
+        const PORT = process.env.PORT || 3000;
+        app.listen(PORT, () => {
+            console.log(`🚀 Server chạy tại http://localhost:${PORT}`);
+        });
+
+    } catch (err) {
+        console.error("❌ Không thể connect MongoDB:", err);
+        process.exit(1);
+    }
+}
+
+startServer();
