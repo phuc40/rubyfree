@@ -4,7 +4,7 @@ const { MongoClient } = require("mongodb");
 
 const app = express();
 
-// 🔥 QUAN TRỌNG khi deploy (Render/Vercel)
+// 🔥 cần cho Render / proxy
 app.set("trust proxy", true);
 
 app.use(cors({
@@ -17,7 +17,7 @@ app.use(express.static(__dirname));
 
 // ===== MongoDB =====
 const MONGODB_URI = process.env.MONGODB_URI || 
-"mongodb+srv://busidolnew:busidol123@cluster0.ejinj73.mongodb.net/?appName=Cluster0";
+"mongodb+srv://busidolnew:busidol123@cluster0.ejinj73.mongodb.net/rubyfree?retryWrites=true&w=majority";
 
 let db;
 let usersCollection;
@@ -142,7 +142,7 @@ app.post("/submit-code", async (req, res) => {
     }
 });
 
-// ===== 🎯 SPIN WHEEL (KHÓA IP CỨNG) =====
+// ===== 🎯 SPIN WHEEL (KHÓA IP) =====
 app.post("/spin-wheel", async (req, res) => {
     try {
         const ip = getRealIP(req);
@@ -190,7 +190,7 @@ app.post("/spin-wheel", async (req, res) => {
     }
 });
 
-// ===== START SERVER (QUAN TRỌNG) =====
+// ===== START SERVER =====
 async function startServer() {
     try {
         await client.connect();
@@ -202,8 +202,17 @@ async function startServer() {
         submittedCodesCollection = db.collection("submittedCodes");
         spinsCollection = db.collection("spins");
 
-        // 🔒 1 IP = 1 record
-        await spinsCollection.createIndex({ ip: 1 }, { unique: true });
+        // 🔥 FIX INDEX (KHÔNG BỊ LỖI NỮA)
+        const indexes = await spinsCollection.indexes();
+        const hasIPIndex = indexes.find(i => i.name === "unique_ip_index");
+
+        if (!hasIPIndex) {
+            await spinsCollection.createIndex(
+                { ip: 1 },
+                { unique: true, name: "unique_ip_index" }
+            );
+            console.log("✅ Created unique_ip_index");
+        }
 
         console.log("✅ MongoDB connected");
 
@@ -213,7 +222,7 @@ async function startServer() {
         });
 
     } catch (err) {
-        console.error("❌ Không thể connect MongoDB:", err);
+        console.error("❌ MongoDB connect fail:", err);
         process.exit(1);
     }
 }
