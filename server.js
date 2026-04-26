@@ -17,7 +17,7 @@ app.use(express.static(__dirname));
 
 // ===== MongoDB =====
 const MONGODB_URI = process.env.MONGODB_URI || 
-"mongodb+srv://busidolnew:busidol123@cluster0.ejinj73.mongodb.net/rubyfree?retryWrites=true&w=majority";
+"mongodb+srv://busidolnew:busidol123@cluster0.ejinj73.mongodb.net/?appName=Cluster0";
 
 let db;
 let usersCollection;
