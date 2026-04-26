@@ -35,20 +35,19 @@ async function connectDB() {
         submittedCodesCollection = db.collection("submittedCodes");
         spinsCollection = db.collection("spins");
 
-        // index chống spam
         await spinsCollection.createIndex({ deviceId: 1 });
         await spinsCollection.createIndex({ ip: 1 });
 
         dbReady = true;
-        console.log("✅ Kết nối MongoDB thành công!");
+        console.log("✅ MongoDB connected");
     } catch (err) {
-        console.error("❌ Lỗi MongoDB:", err);
+        console.error("❌ MongoDB error:", err);
         dbReady = false;
     }
 }
 connectDB();
 
-// ===== CHỜ DB =====
+// ===== WAIT DB =====
 async function waitForDB() {
     let retries = 0;
     while (!dbReady && retries < 30) {
@@ -120,7 +119,7 @@ app.post("/get-code", async (req, res) => {
         res.json({ success: true, code });
 
     } catch (err) {
-        console.error("Lỗi get-code:", err);
+        console.error("get-code:", err);
         res.json({ success: false, message: err.message });
     }
 });
@@ -164,14 +163,13 @@ app.post("/submit-code", async (req, res) => {
     }
 });
 
-// ===== 🎯 SPIN WHEEL (FIX CHÍNH) =====
+// ===== 🎯 SPIN WHEEL – KHÓA CỨNG =====
 app.post("/spin-wheel", async (req, res) => {
     try {
         await waitForDB();
 
         const { deviceId } = req.body;
         const ip = getIP(req);
-        const userAgent = req.headers["user-agent"];
 
         if (!deviceId) {
             return res.json({ success: false, message: "Thiếu deviceId" });
@@ -180,24 +178,35 @@ app.post("/spin-wheel", async (req, res) => {
         const cooldown = 6 * 60 * 60 * 1000;
         const now = Date.now();
 
-        // 🔥 kiểm tra CHẶT hơn
-        const user = await spinsCollection.findOne({
-            $or: [
-                { deviceId },
-                { ip },
-                { userAgent }
-            ]
+       
+        const ipUsed = await spinsCollection.findOne({
+            ip,
+            lastSpin: { $gt: now - cooldown }
         });
 
-        if (user && user.lastSpin) {
-            if (now - user.lastSpin < cooldown) {
-                return res.json({
-                    success: false,
-                    remain: cooldown - (now - user.lastSpin)
-                });
-            }
+        if (ipUsed) {
+            return res.json({
+                success: false,
+                remain: cooldown - (now - ipUsed.lastSpin),
+                message: "Ai Cho Quay Nữa ?"
+            });
         }
 
+    
+        const deviceUsed = await spinsCollection.findOne({
+            deviceId,
+            lastSpin: { $gt: now - cooldown }
+        });
+
+        if (deviceUsed) {
+            return res.json({
+                success: false,
+                remain: cooldown - (now - deviceUsed.lastSpin),
+                message: "Ai Cho Quay Nữa ?"
+            });
+        }
+
+        // 🎯 RANDOM
         const characters = [
             "Ace","Echo","Smart","Khan","Lucy Băng","Lucy Idol",
             "Ruby","Bensi","Gin","Jey","Koo","Thrue","Bebee","Gold"
@@ -205,11 +214,10 @@ app.post("/spin-wheel", async (req, res) => {
 
         const result = characters[Math.floor(Math.random() * characters.length)];
 
-        // 🔥 lưu đủ thông tin
+        // 💾 LƯU
         await spinsCollection.insertOne({
             deviceId,
             ip,
-            userAgent,
             lastSpin: now,
             lastResult: result
         });
