@@ -171,7 +171,11 @@ app.post("/spin-wheel", async (req, res) => {
         const result = characters[Math.floor(Math.random() * characters.length)];
 
         await spinsCollection.updateOne(
-            { ip },
+            { $or: [
+                    { ip },
+                    { deviceId },
+                    { fingerprint }
+                ] },
             {
                 $set: {
                     ip,
