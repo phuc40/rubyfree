@@ -4,23 +4,8 @@ const { MongoClient } = require("mongodb");
 
 const app = express();
 
+// 🔥 QUAN TRỌNG: để lấy IP thật khi deploy
 app.set("trust proxy", true);
-
-function getRealIP(req) {
-    let ip =
-        req.headers["cf-connecting-ip"] || 
-        req.headers["x-forwarded-for"]?.split(",")[0] ||
-        req.ip ||
-        req.socket.remoteAddress;
-
-    if (!ip) return "unknown";
-
-    if (ip.startsWith("::ffff:")) {
-        ip = ip.replace("::ffff:", "");
-    }
-
-    return ip;
-}
 
 app.use(cors({
     origin: "*",
@@ -44,11 +29,6 @@ let dbReady = false;
 const client = new MongoClient(MONGODB_URI);
 
 async function connectDB() {
-    await spinsCollection.createIndex(
-    { ip: 1 },
-    { unique: true }
-);
-    
     try {
         await client.connect();
         db = client.db("rubyfree");
@@ -58,8 +38,8 @@ async function connectDB() {
         submittedCodesCollection = db.collection("submittedCodes");
         spinsCollection = db.collection("spins");
 
-        await spinsCollection.createIndex({ deviceId: 1 });
-        await spinsCollection.createIndex({ ip: 1 });
+        // 🔒 KHÓA CỨNG IP (1 IP chỉ có 1 record)
+        await spinsCollection.createIndex({ ip: 1 }, { unique: true });
 
         dbReady = true;
         console.log("✅ MongoDB connected");
@@ -80,6 +60,24 @@ async function waitForDB() {
     if (!dbReady) throw new Error("DB timeout");
 }
 
+// ===== LẤY IP CHUẨN =====
+function getRealIP(req) {
+    let ip =
+        req.headers["cf-connecting-ip"] || // Cloudflare
+        req.headers["x-forwarded-for"]?.split(",")[0] ||
+        req.ip ||
+        req.socket.remoteAddress;
+
+    if (!ip) return "unknown";
+
+    // fix IPv6 dạng ::ffff:127.0.0.1
+    if (ip.startsWith("::ffff:")) {
+        ip = ip.replace("::ffff:", "");
+    }
+
+    return ip;
+}
+
 // ===== HELPER =====
 function generateCode() {
     const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -89,10 +87,6 @@ function generateCode() {
         if (i === 3 || i === 7) code += "-";
     }
     return code;
-}
-
-function getIP(req) {
-    return req.headers["x-forwarded-for"] || req.socket.remoteAddress;
 }
 
 // ===== TOKEN =====
@@ -107,7 +101,7 @@ app.post("/get-code", async (req, res) => {
         await waitForDB();
 
         const { deviceId } = req.body;
-        const ip = getIP(req);
+        const ip = getRealIP(req);
 
         if (!deviceId) {
             return res.json({ success: false, message: "Thiếu deviceId" });
@@ -153,7 +147,7 @@ app.post("/submit-code", async (req, res) => {
         await waitForDB();
 
         const { deviceId, userId, platform, userInputCode, systemCode, timestamp } = req.body;
-        const ip = getIP(req);
+        const ip = getRealIP(req);
 
         if (!deviceId || !userId || !platform || !userInputCode) {
             return res.json({ success: false, message: "Thiếu dữ liệu" });
@@ -186,7 +180,7 @@ app.post("/submit-code", async (req, res) => {
     }
 });
 
-// ===== 🎯 SPIN WHEEL – KHÓA CỨNG =====
+// ===== 🎯 SPIN WHEEL (KHÓA CỨNG IP) =====
 app.post("/spin-wheel", async (req, res) => {
     try {
         await waitForDB();
@@ -195,7 +189,6 @@ app.post("/spin-wheel", async (req, res) => {
         const now = Date.now();
         const cooldown = 6 * 60 * 60 * 1000;
 
-        // 🔒 check IP
         const existing = await spinsCollection.findOne({ ip });
 
         if (existing) {
@@ -205,11 +198,11 @@ app.post("/spin-wheel", async (req, res) => {
                 return res.json({
                     success: false,
                     remain: cooldown - diff,
-                    message: "Ai Cho Quay Nữa"
+                    message: "Ai Cho Quay Vậy"
                 });
             }
 
-            // hết cooldown → update
+            // hết cooldown → quay lại
             const characters = [
                 "Ace","Echo","Smart","Khan","Lucy Băng","Lucy Idol",
                 "Ruby","Bensi","Gin","Jey","Koo","Thrue","Bebee","Gold"
@@ -247,51 +240,16 @@ app.post("/spin-wheel", async (req, res) => {
         res.json({ success: true, result });
 
     } catch (err) {
-       
+        // 🔥 chặn insert trùng IP
         if (err.code === 11000) {
             return res.json({
                 success: false,
-                message: "Ai Cho Quay Nữa"
+                message: "Ai Cho Quay Vậy"
             });
         }
 
         console.error("spin-wheel:", err);
         res.json({ success: false, message: "Lỗi server" });
-    }
-});
-// ===== HISTORY =====
-app.get("/history", async (req, res) => {
-    try {
-        await waitForDB();
-        const data = await codesCollection.find({}).toArray();
-        res.json(data);
-    } catch {
-        res.json([]);
-    }
-});
-
-app.get("/submitted-codes-api", async (req, res) => {
-    try {
-        await waitForDB();
-        const data = await submittedCodesCollection.find({}).toArray();
-        res.json(data);
-    } catch {
-        res.json([]);
-    }
-});
-
-app.get("/submitted-codes", (req, res) => {
-    res.sendFile(__dirname + "/submitted-codes.html");
-});
-
-app.get("/check", async (req, res) => {
-    try {
-        await waitForDB();
-        const code = req.query.code;
-        const found = await codesCollection.findOne({ code });
-        res.json(found ? { valid: true } : { valid: false });
-    } catch {
-        res.json({ valid: false });
     }
 });
 
