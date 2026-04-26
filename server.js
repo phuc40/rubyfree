@@ -4,6 +4,24 @@ const { MongoClient } = require("mongodb");
 
 const app = express();
 
+app.set("trust proxy", true);
+
+function getRealIP(req) {
+    let ip =
+        req.headers["cf-connecting-ip"] || 
+        req.headers["x-forwarded-for"]?.split(",")[0] ||
+        req.ip ||
+        req.socket.remoteAddress;
+
+    if (!ip) return "unknown";
+
+    if (ip.startsWith("::ffff:")) {
+        ip = ip.replace("::ffff:", "");
+    }
+
+    return ip;
+}
+
 app.use(cors({
     origin: "*",
     methods: ["GET", "POST"]
@@ -26,6 +44,11 @@ let dbReady = false;
 const client = new MongoClient(MONGODB_URI);
 
 async function connectDB() {
+    await spinsCollection.createIndex(
+    { ip: 1 },
+    { unique: true }
+);
+    
     try {
         await client.connect();
         db = client.db("rubyfree");
@@ -168,45 +191,46 @@ app.post("/spin-wheel", async (req, res) => {
     try {
         await waitForDB();
 
-        const { deviceId } = req.body;
-        const ip = getIP(req);
-
-        if (!deviceId) {
-            return res.json({ success: false, message: "Thiếu deviceId" });
-        }
-
-        const cooldown = 6 * 60 * 60 * 1000;
+        const ip = getRealIP(req);
         const now = Date.now();
+        const cooldown = 6 * 60 * 60 * 1000;
 
-       
-        const ipUsed = await spinsCollection.findOne({
-            ip,
-            lastSpin: { $gt: now - cooldown }
-        });
+        // 🔒 check IP
+        const existing = await spinsCollection.findOne({ ip });
 
-        if (ipUsed) {
-            return res.json({
-                success: false,
-                remain: cooldown - (now - ipUsed.lastSpin),
-                message: "Ai Cho Quay Nữa ?"
-            });
+        if (existing) {
+            const diff = now - existing.lastSpin;
+
+            if (diff < cooldown) {
+                return res.json({
+                    success: false,
+                    remain: cooldown - diff,
+                    message: "Ai Cho Quay Nữa"
+                });
+            }
+
+            // hết cooldown → update
+            const characters = [
+                "Ace","Echo","Smart","Khan","Lucy Băng","Lucy Idol",
+                "Ruby","Bensi","Gin","Jey","Koo","Thrue","Bebee","Gold"
+            ];
+
+            const result = characters[Math.floor(Math.random() * characters.length)];
+
+            await spinsCollection.updateOne(
+                { ip },
+                {
+                    $set: {
+                        lastSpin: now,
+                        lastResult: result
+                    }
+                }
+            );
+
+            return res.json({ success: true, result });
         }
 
-    
-        const deviceUsed = await spinsCollection.findOne({
-            deviceId,
-            lastSpin: { $gt: now - cooldown }
-        });
-
-        if (deviceUsed) {
-            return res.json({
-                success: false,
-                remain: cooldown - (now - deviceUsed.lastSpin),
-                message: "Ai Cho Quay Nữa ?"
-            });
-        }
-
-        // 🎯 RANDOM
+        // 👉 lần đầu
         const characters = [
             "Ace","Echo","Smart","Khan","Lucy Băng","Lucy Idol",
             "Ruby","Bensi","Gin","Jey","Koo","Thrue","Bebee","Gold"
@@ -214,9 +238,7 @@ app.post("/spin-wheel", async (req, res) => {
 
         const result = characters[Math.floor(Math.random() * characters.length)];
 
-        // 💾 LƯU
         await spinsCollection.insertOne({
-            deviceId,
             ip,
             lastSpin: now,
             lastResult: result
@@ -225,11 +247,18 @@ app.post("/spin-wheel", async (req, res) => {
         res.json({ success: true, result });
 
     } catch (err) {
+       
+        if (err.code === 11000) {
+            return res.json({
+                success: false,
+                message: "Ai Cho Quay Nữa"
+            });
+        }
+
         console.error("spin-wheel:", err);
         res.json({ success: false, message: "Lỗi server" });
     }
 });
-
 // ===== HISTORY =====
 app.get("/history", async (req, res) => {
     try {
