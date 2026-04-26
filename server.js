@@ -222,18 +222,6 @@ app.post("/spin-wheel", async (req, res) => {
     }
 });
 
-const ipCount = await spinsCollection.countDocuments({
-    ip,
-    lastSpin: { $gt: now - cooldown }
-});
-
-if (ipCount >= 1) {
-    return res.json({
-        success: false,
-        message: "Ai cho quay mà quay ?"
-    });
-}
-
 // ===== HISTORY =====
 app.get("/history", async (req, res) => {
     try {
