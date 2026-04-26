@@ -171,6 +171,7 @@ app.post("/spin-wheel", async (req, res) => {
 
         const { deviceId } = req.body;
         const ip = getIP(req);
+        const userAgent = req.headers["user-agent"];
 
         if (!deviceId) {
             return res.json({ success: false, message: "Thiếu deviceId" });
@@ -179,8 +180,13 @@ app.post("/spin-wheel", async (req, res) => {
         const cooldown = 6 * 60 * 60 * 1000;
         const now = Date.now();
 
+        // 🔥 kiểm tra CHẶT hơn
         const user = await spinsCollection.findOne({
-            $or: [{ deviceId }, { ip }]
+            $or: [
+                { deviceId },
+                { ip },
+                { userAgent }
+            ]
         });
 
         if (user && user.lastSpin) {
@@ -199,18 +205,14 @@ app.post("/spin-wheel", async (req, res) => {
 
         const result = characters[Math.floor(Math.random() * characters.length)];
 
-        await spinsCollection.updateOne(
-            { $or: [{ deviceId }, { ip }] },
-            {
-                $set: {
-                    deviceId,
-                    ip,
-                    lastSpin: now,
-                    lastResult: result
-                }
-            },
-            { upsert: true }
-        );
+        // 🔥 lưu đủ thông tin
+        await spinsCollection.insertOne({
+            deviceId,
+            ip,
+            userAgent,
+            lastSpin: now,
+            lastResult: result
+        });
 
         res.json({ success: true, result });
 
@@ -219,6 +221,18 @@ app.post("/spin-wheel", async (req, res) => {
         res.json({ success: false, message: "Lỗi server" });
     }
 });
+
+const ipCount = await spinsCollection.countDocuments({
+    ip,
+    lastSpin: { $gt: now - cooldown }
+});
+
+if (ipCount >= 1) {
+    return res.json({
+        success: false,
+        message: "Ai cho quay mà quay ?"
+    });
+}
 
 // ===== HISTORY =====
 app.get("/history", async (req, res) => {
