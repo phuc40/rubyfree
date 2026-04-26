@@ -188,7 +188,7 @@ function spinWheel() {
     fetch("/spin-wheel", {
         method: "POST",
         headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({ deviceId })
+        body: JSON.stringify({ deviceId, fingerprint: getFingerprint() })
     })
     .then(res => res.json())
     .then(data => {
