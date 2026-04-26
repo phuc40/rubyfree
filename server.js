@@ -118,6 +118,7 @@ app.post("/submit-code", async (req, res) => {
     try {
         const { deviceId, userId, platform, userInputCode, systemCode, timestamp } = req.body;
         const ip = getRealIP(req);
+        const userAgent = req.headers["user-agent"] || "unknown";
 
         if (!deviceId || !userId || !platform || !userInputCode) {
             return res.json({ success: false, message: "Thiếu dữ liệu" });
@@ -132,12 +133,30 @@ app.post("/submit-code", async (req, res) => {
             return res.json({ success: false, message: "Sai mã!" });
         }
 
+        // 🔥 CHECK SPAM (3 lớp)
+        const existing = await submittedCodesCollection.findOne({
+            $or: [
+                { deviceId },
+                { ip },
+                { userAgent }
+            ]
+        });
+
+        if (existing) {
+            return res.json({
+                success: false,
+                message: "❌ Bạn đã gửi mã rồi!"
+            });
+        }
+
+        // ✅ INSERT
         await submittedCodesCollection.insertOne({
             deviceId,
             userId,
             platform,
             code: userInputCode.toUpperCase(),
             ip,
+            userAgent,
             timestamp,
             confirmedAt: new Date()
         });
