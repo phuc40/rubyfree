@@ -5,21 +5,6 @@
     box-sizing: border-box;
 }
 
-h2 {
-    margin-top: 20px;
-    font-size: 14px; 
-    font-weight: 500;
-    color: #9ca3af;
-}
-
-.open-price-btn {
-    margin-top: 20px;
-}
-
-.open-wheel-btn {
-    margin-top: 10px; /* cách bảng giá 10px */
-}
-
 /* ===== BODY ===== */
 body {
     font-family: Inter, -apple-system, sans-serif;
@@ -35,7 +20,7 @@ body {
 /* ===== CONTAINER ===== */
 .container {
     width: 100%;
-    max-width: 400px;
+    max-width: 420px;
     padding: 32px;
     border-radius: 20px;
 
@@ -52,13 +37,19 @@ body {
 
 /* ===== TITLE ===== */
 h1 {
-    font-size: 22px;
+    font-size: 24px;
     font-weight: 600;
     margin-bottom: 20px;
 
     background: linear-gradient(90deg, #60a5fa, #a78bfa);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
+}
+
+h2 {
+    margin-top: 20px;
+    font-size: 14px;
+    color: #9ca3af;
 }
 
 /* ===== BUTTON ===== */
@@ -72,8 +63,6 @@ button {
     color: white;
 
     font-size: 15px;
-    font-weight: 500;
-
     cursor: pointer;
 
     transition: 0.25s;
@@ -87,8 +76,7 @@ button:hover {
 
 /* ===== CODE ===== */
 #code {
-    margin-top: 15px;
-
+    margin-top: 10px;
     font-size: 20px;
     font-weight: 600;
 
@@ -96,13 +84,56 @@ button:hover {
     border-radius: 10px;
 
     background: rgba(2,6,23,0.8);
-
     border: 1px solid rgba(255,255,255,0.08);
 
     letter-spacing: 3px;
-
-    box-shadow: inset 0 0 10px rgba(0,0,0,0.6);
 }
+
+/* ===== FORM ===== */
+.code-input-section {
+    margin-top: 20px;
+    text-align: left;
+}
+
+.sub {
+    font-size: 13px;
+    color: #9ca3af;
+    margin-bottom: 10px;
+}
+
+.form-group {
+    margin-bottom: 12px;
+}
+
+.form-label {
+    display: block;
+    font-size: 12px;
+    margin-bottom: 5px;
+    color: #9ca3af;
+}
+
+.form-input,
+.form-select {
+    width: 100%;
+    padding: 10px;
+    border-radius: 10px;
+
+    background: rgba(2,6,23,0.7);
+    border: 1px solid rgba(255,255,255,0.08);
+    color: white;
+}
+
+.submit-btn {
+    margin-top: 10px;
+}
+
+.submit-status {
+    margin-top: 10px;
+    font-size: 13px;
+}
+
+.success { color: #4ade80; }
+.error { color: #f87171; }
 
 /* ===== SOCIAL ===== */
 .social-buttons {
@@ -123,9 +154,8 @@ button:hover {
     border: 1px solid rgba(255,255,255,0.08);
 }
 
-.social-btn.youtube {
+.youtube {
     background: rgba(255,0,0,0.1);
-    border-color: rgba(255,0,0,0.3);
 }
 
 /* ===== MODAL ===== */
@@ -145,7 +175,7 @@ button:hover {
 
 .modal-content {
     width: 90%;
-    max-width: 400px;
+    max-width: 500px;
 
     background: rgba(15, 23, 42, 0.95);
     padding: 20px;
@@ -165,12 +195,27 @@ button:hover {
     width: 100%;
     border-collapse: collapse;
     margin-top: 15px;
+
+    background: rgba(2, 6, 23, 0.6);
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid rgba(59,130,246,0.2);
 }
 
-.price-table th,
+.price-table th {
+    padding: 12px;
+    font-size: 13px;
+    color: #60a5fa;
+    background: rgba(30,41,59,0.8);
+}
+
 .price-table td {
-    padding: 10px;
-    text-align: left;
+    padding: 12px;
+    border-top: 1px solid rgba(59,130,246,0.1);
+}
+
+.price-table tr:hover {
+    background: rgba(59,130,246,0.1);
 }
 
 /* ===== WHEEL ===== */
@@ -188,73 +233,35 @@ button:hover {
     border: 6px solid #3b82f6;
 
     background: conic-gradient(
-        #60a5fa 0deg 25.7deg,
-        #6366f1 25.7deg 51.4deg,
-        #a78bfa 51.4deg 77.1deg,
-        #f472b6 77.1deg 102.8deg,
-        #fb7185 102.8deg 128.5deg,
-        #f59e0b 128.5deg 154.2deg,
-        #34d399 154.2deg 179.9deg,
-        #22d3ee 179.9deg 205.6deg,
-        #60a5fa 205.6deg 231.3deg,
-        #6366f1 231.3deg 257deg,
-        #a78bfa 257deg 282.7deg,
-        #f472b6 282.7deg 308.4deg,
-        #fb7185 308.4deg 334.1deg,
-        #f59e0b 334.1deg 360deg
+        #60a5fa, #6366f1, #a78bfa, #f472b6,
+        #fb7185, #f59e0b, #34d399, #22d3ee,
+        #60a5fa
     );
 
     transition: transform 4s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-/* ===== NÚT QUAY ===== */
 .spin-btn {
     position: absolute;
     top: 50%;
     left: 50%;
-
     transform: translate(-50%, -50%) !important;
 
     width: 70px;
     height: 70px;
     border-radius: 50%;
-
-    z-index: 3;
 }
 
-/* ===== POINTER (KIM) ===== */
+/* ===== POINTER ===== */
 .pointer {
     position: absolute;
     top: -10px;
     left: 50%;
     transform: translateX(-50%);
 
-    width: 0;
-    height: 0;
-
     border-left: 12px solid transparent;
     border-right: 12px solid transparent;
-    border-top: 20px solid yellow; /* đổi từ bottom -> top */
-
-    z-index: 5;
-}
-
-/* ===== ITEM ẢNH ===== */
-.wheel-item {
-    position: absolute;
-    width: 43px;
-    height: 43px;
-
-    top: 50%;
-    left: 50%;
-
-    transform-origin: 0 0;
-}
-
-.wheel-item img {
-    width: 100%;
-    height: 100%;
-    border-radius: 50%;
+    border-top: 20px solid yellow;
 }
 
 /* ===== RESULT ===== */
@@ -265,13 +272,6 @@ button:hover {
 }
 
 .cooldown-text {
-    margin-top: 5px;
     font-size: 13px;
     color: #fbbf24;
-}
-
-.result-text {
-    margin-top: 10px;
-    font-weight: 600;
-    color: #60a5fa;
 }
