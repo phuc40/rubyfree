@@ -95,6 +95,24 @@ app.post("/get-code", async (req, res) => {
     }
 });
 
+app.get("/submitted-codes", (req, res) => {
+    res.sendFile(__dirname + "/submitted-codes.html");
+});
+
+app.get("/submitted-codes-api", async (req, res) => {
+    try {
+        const data = await submittedCodesCollection
+            .find({})
+            .sort({ confirmedAt: -1 })
+            .toArray();
+
+        res.json(data);
+    } catch (err) {
+        console.error("submitted-codes-api:", err);
+        res.json([]);
+    }
+});
+
 // ===== SUBMIT CODE =====
 app.post("/submit-code", async (req, res) => {
     try {
