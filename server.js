@@ -1,7 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const multer = require("multer");
-const { MongoClient } = require("mongodb");
+const { MongoClient, ObjectId } = require("mongodb"); // ✅ FIX
 
 const app = express();
 app.set("trust proxy", true);
@@ -110,8 +110,10 @@ function generateCode() {
 
 // ================= API =================
 
+// 🔥 FIX: đảm bảo DB ready
 app.get("/shop-acc", async (req, res) => {
     try {
+        await waitForDB(); // ✅ FIX
         const data = await shopCollection.find().sort({ createdAt: -1 }).toArray();
         res.json(data);
     } catch {
@@ -127,9 +129,9 @@ app.post("/delete-acc", async (req, res) => {
 
         if (!id) return res.json({ success: false });
 
-        await shopCollection.deleteOne({ _id: new ObjectId(id) });
+        const result = await shopCollection.deleteOne({ _id: new ObjectId(id) }); // ✅ FIX
 
-        res.json({ success: true });
+        res.json({ success: result.deletedCount === 1 }); // ✅ FIX chuẩn
 
     } catch (err) {
         console.error(err);
@@ -147,12 +149,12 @@ app.post("/update-acc", async (req, res) => {
             return res.status(400).json({ success: false, message: "Thiếu dữ liệu" });
         }
 
-        await shopCollection.updateOne(
-            { _id: new ObjectId(id) },
+        const result = await shopCollection.updateOne(
+            { _id: new ObjectId(id) }, // ✅ FIX
             { $set: { price } }
         );
 
-        res.json({ success: true });
+        res.json({ success: result.modifiedCount === 1 }); // ✅ FIX
 
     } catch (err) {
         console.error("update-acc:", err);
@@ -165,13 +167,14 @@ app.get("/create-token", (req, res) => {
     res.json({ token: Math.random().toString(36).substring(2) + Date.now() });
 });
 
-// ===== UPLOAD SHOP (ADMIN ONLY) =====
-
+// ===== UPLOAD SHOP =====
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
 app.post("/upload-acc", upload.single("image"), async (req, res) => {
     try {
+        await waitForDB(); // ✅ FIX
+
         const file = req.file;
         const { price } = req.body;
 
