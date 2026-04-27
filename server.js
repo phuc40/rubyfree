@@ -21,6 +21,8 @@ app.use((req, res, next) => {
     if (req.path.startsWith("/api") ||
         req.path === "/upload-acc" ||
         req.path === "/shop-acc" ||
+        req.path === "/delete-acc" ||
+        req.path === "/update-acc" ||
         req.path === "/get-code" ||
         req.path === "/submit-code" ||
         req.path === "/spin-wheel"
