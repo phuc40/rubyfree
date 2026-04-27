@@ -1,3 +1,9 @@
+const express = require("express");
+const cors = require("cors");
+const { MongoClient } = require("mongodb");
+
+const app = express();
+
 const MAINTENANCE_MODE = true;
 const ADMIN_KEY = "13102009"; // tự đặt
 
@@ -17,11 +23,6 @@ app.use((req, res, next) => {
     `);
 });
 
-const express = require("express");
-const cors = require("cors");
-const { MongoClient } = require("mongodb");
-
-const app = express();
 app.set("trust proxy", true);
 
 app.use(cors({
