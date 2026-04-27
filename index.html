@@ -12,6 +12,7 @@
 <div class="container">
     <h1>Nhận Ruby</h1>
 
+    <!-- NHẬN MÃ -->
     <button onclick="getReward()">Nhận mã</button>
 
     <h2>Mã của bạn:</h2>
@@ -23,7 +24,7 @@
         <p class="sub">Nhập ID và chọn nền tảng của bạn:</p>
 
         <div class="form-group">
-            <label class="form-label">🆔 ID của bạn (Gửi Mã Và ID Qua Discord Nếu Acc Đã Xác Minh Email)</label>
+            <label class="form-label">🆔 ID của bạn</label>
             <input type="text" id="userIdInput" class="form-input" placeholder="Nhập ID">
         </div>
 
@@ -57,20 +58,21 @@
         </a>
     </div>
 
-    <!-- NÚT BẢNG GIÁ -->
-    <button class="open-price-btn" onclick="openPrice()">💰 Bảng Giá El Dorado</button>
-
-    <!-- NÚT VÒNG QUAY (NGAY DƯỚI) -->
-    <button class="open-wheel-btn" onclick="openWheel()">🎯 Vòng quay nhân vật</button>
+    <!-- ACTION BUTTONS -->
+    <div class="action-buttons">
+        <button class="open-price-btn" onclick="openPrice()">💰 Bảng Giá</button>
+        <button class="open-wheel-btn" onclick="openWheel()">🎯 Vòng quay</button>
+        <button class="open-shop-btn" onclick="openShop()">🛒 Shop Acc</button>
+    </div>
 
 </div>
 
-<!-- POPUP BẢNG GIÁ -->
+<!-- ================= POPUP BẢNG GIÁ ================= -->
 <div id="priceModal" class="modal">
     <div class="modal-content">
         <span class="close" onclick="closePrice()">&times;</span>
 
-        <h2>💰 Bảng giá vật phẩm El Dorado AMO, ATV, LG</h2>
+        <h2>💰 Bảng giá vật phẩm</h2>
 
         <table class="price-table">
             <tr>
@@ -78,16 +80,16 @@
                 <th>Vật phẩm</th>
             </tr>
             <tr><td>20k</td><td>Random 8 sao (Trừ Thần)</td></tr>
-            <tr><td>50k</td><td>Tự chọn 8 sao Level 90 (Trừ Thần)</td></tr>
-            <tr><td>100k</td><td>Tự chọn 8 sao Level 110 (Trừ Thần)</td></tr>
+            <tr><td>50k</td><td>Tự chọn 8 sao Level 90</td></tr>
+            <tr><td>100k</td><td>Tự chọn 8 sao Level 110</td></tr>
             <tr><td>50k</td><td>8000 Ruby</td></tr>
-            <tr><td>50k</td><td>1 Item A</td></tr>
-            <tr><td>50k</td><td>Reset Map 1 lần</td></tr>
+            <tr><td>50k</td><td>Item A</td></tr>
+            <tr><td>50k</td><td>Reset Map</td></tr>
         </table>
     </div>
 </div>
 
-<!-- POPUP VÒNG QUAY -->
+<!-- ================= POPUP VÒNG QUAY ================= -->
 <div id="wheelModal" class="modal">
     <div class="modal-content">
         <span class="close" onclick="closeWheel()">&times;</span>
@@ -95,18 +97,31 @@
         <h2>🎯 Vòng quay may mắn</h2>
 
         <div class="wheel-container">
+            <div id="wheel" class="wheel"></div>
+            <div class="pointer"></div>
 
-    <div id="wheel" class="wheel"></div>
-
-    <button class="spin-btn" onclick="spinWheel()">Quay</button>
-</div>
+            <button class="spin-btn" onclick="spinWheel()">Quay</button>
+        </div>
 
         <p id="result" class="result-text"></p>
         <p id="cooldown" class="cooldown-text"></p>
     </div>
 </div>
 
-<script src="obfuscated.js"></script>
+<!-- ================= POPUP SHOP ================= -->
+<div id="shopModal" class="modal">
+    <div class="modal-content shop-content">
+        <span class="close" onclick="closeShop()">&times;</span>
+
+        <h2>🛒 Shop Acc El Dorado</h2>
+
+        <div id="shopList" class="shop-list">
+            <!-- JS render -->
+        </div>
+    </div>
+</div>
+
+<script src="script.js"></script>
 
 </body>
 </html>
