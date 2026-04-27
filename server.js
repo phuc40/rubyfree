@@ -116,6 +116,25 @@ app.get("/shop-acc", async (req, res) => {
     }
 });
 
+app.post("/delete-acc", async (req,res)=>{
+    const { id } = req.body;
+
+    await shopCollection.deleteOne({ _id: new require("mongodb").ObjectId(id) });
+
+    res.json({ success:true });
+});
+
+app.post("/update-acc", async (req,res)=>{
+    const { id, price } = req.body;
+
+    await shopCollection.updateOne(
+        { _id: new require("mongodb").ObjectId(id) },
+        { $set: { price } }
+    );
+
+    res.json({ success:true });
+});
+
 // ===== TOKEN =====
 app.get("/create-token", (req, res) => {
     res.json({ token: Math.random().toString(36).substring(2) + Date.now() });
