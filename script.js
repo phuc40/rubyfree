@@ -227,56 +227,48 @@ window.addEventListener("load", () => {
     createWheelItems();
 });
 
-function openShop() {
-    document.getElementById("shopModal").style.display = "flex";
-    loadShop();
-}
-
-function closeShop() {
-    document.getElementById("shopModal").style.display = "none";
-}
+let shopData = [];
+let currentIndex = 0;
 
 async function loadShop() {
-    try {
-        const res = await fetch("/shop-acc");
+    const res = await fetch("/shop-acc");
+    shopData = await res.json();
 
-        if (!res.ok) throw new Error("API lỗi");
+    if (!shopData.length) {
+        document.getElementById("shopSingle").innerHTML = "<p>Chưa có acc</p>";
+        return;
+    }
 
-        const data = await res.json();
+    currentIndex = 0;
+    renderShop();
+}
 
-        const container = document.getElementById("shopList");
+function renderShop(){
+    const acc = shopData[currentIndex];
 
-        if (!data.length) {
-            container.innerHTML = "<p>Chưa có acc</p>";
-            return;
-        }
-
-        container.innerHTML = data.map(acc => `
-    <div class="shop-item">
+    document.getElementById("shopSingle").innerHTML = `
         <div class="thumb">
             <img src="${acc.image}">
         </div>
         <div class="shop-price">${acc.price}</div>
         <button onclick="buyAcc()">Mua</button>
-    </div>
-`).join("");
-
-    } catch (err) {
-        console.log(err);
-    }
+    `;
 }
 
-function buyAcc() {
-    window.open("https://discord.com/users/1201014400350429284");
+function nextAcc(){
+    if (!shopData.length) return;
+
+    currentIndex++;
+    if (currentIndex >= shopData.length) currentIndex = 0;
+
+    renderShop();
 }
 
-function scrollShop(direction){
-    const container = document.getElementById("list");
+function prevAcc(){
+    if (!shopData.length) return;
 
-    const scrollAmount = 320; // = width item + gap
+    currentIndex--;
+    if (currentIndex < 0) currentIndex = shopData.length - 1;
 
-    container.scrollBy({
-        left: direction * scrollAmount,
-        behavior: "smooth"
-    });
+    renderShop();
 }
