@@ -389,45 +389,40 @@ button:hover {
     cursor: pointer;
 }
 
-.shop-wrapper{
+/* ===== SINGLE SHOP VIEW ===== */
+.shop-viewer{
     position:relative;
+    margin-top:15px;
+    text-align:center;
+}
+
+/* khung hiển thị 1 acc */
+.shop-single{
+    width:100%;
+    max-width:320px;
+    margin:auto;
+
+    background:#020617;
+    border-radius:15px;
     overflow:hidden;
-    margin-top:25px;
+    border:1px solid rgba(255,255,255,0.08);
 }
 
-/* slider ngang */
-.shop-slider{
-    display:flex;
-    gap:20px;
-    overflow-x:auto;
-    scroll-behavior:smooth;
-    padding:10px;
-}
-
-/* ẩn thanh scroll */
-.shop-slider::-webkit-scrollbar{
-    display:none;
-}
-
-/* mỗi item KHÔNG bị co */
-.item{
-    min-width:300px; /* 👈 giữ size cố định */
-    max-width:300px;
-    flex-shrink:0;   /* 👈 không cho co */
-
-    background:rgba(15,23,42,0.6);
-    border-radius:16px;
-    overflow:hidden;
-}
-
-/* ảnh giữ nguyên đẹp */
-.item img{
+/* ảnh chuẩn youtube */
+.shop-single .thumb{
     width:100%;
     aspect-ratio:16/9;
+    overflow:hidden;
+    background:#000;
+}
+
+.shop-single img{
+    width:100%;
+    height:100%;
     object-fit:cover;
 }
 
-/* nút điều hướng */
+/* nút */
 .nav-btn{
     position:absolute;
     top:50%;
@@ -445,5 +440,5 @@ button:hover {
     cursor:pointer;
 }
 
-.left{ left:5px; }
-.right{ right:5px; }
+.left{ left:0; }
+.right{ right:0; }
