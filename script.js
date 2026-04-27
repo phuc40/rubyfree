@@ -252,12 +252,14 @@ async function loadShop() {
         }
 
         container.innerHTML = data.map(acc => `
-            <div class="shop-item">
-                <img src="${acc.image}" style="aspect-ratio:16/9;object-fit:cover;width:100%">
-                <div class="shop-price">${acc.price}</div>
-                <button onclick="buyAcc()">Mua</button>
-            </div>
-        `).join("");
+    <div class="shop-item">
+        <div class="thumb">
+            <img src="${acc.image}">
+        </div>
+        <div class="shop-price">${acc.price}</div>
+        <button onclick="buyAcc()">Mua</button>
+    </div>
+`).join("");
 
     } catch (err) {
         console.log(err);
