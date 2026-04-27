@@ -119,23 +119,45 @@ app.get("/shop-acc", async (req, res) => {
     }
 });
 
-app.post("/delete-acc", async (req,res)=>{
-    const { id } = req.body;
+app.post("/delete-acc", async (req, res) => {
+    try {
+        await waitForDB();
 
-    await shopCollection.deleteOne({ _id: new require("mongodb").ObjectId(id) });
+        const { id } = req.body;
 
-    res.json({ success:true });
+        if (!id) return res.json({ success: false });
+
+        await shopCollection.deleteOne({ _id: new ObjectId(id) });
+
+        res.json({ success: true });
+
+    } catch (err) {
+        console.error(err);
+        res.json({ success: false });
+    }
 });
 
-app.post("/update-acc", async (req,res)=>{
-    const { id, price } = req.body;
+app.post("/update-acc", async (req, res) => {
+    try {
+        await waitForDB();
+        
+        const { id, price } = req.body;
 
-    await shopCollection.updateOne(
-        { _id: new require("mongodb").ObjectId(id) },
-        { $set: { price } }
-    );
+        if (!id || !price) {
+            return res.status(400).json({ success: false, message: "Thiếu dữ liệu" });
+        }
 
-    res.json({ success:true });
+        await shopCollection.updateOne(
+            { _id: new ObjectId(id) },
+            { $set: { price } }
+        );
+
+        res.json({ success: true });
+
+    } catch (err) {
+        console.error("update-acc:", err);
+        res.status(500).json({ success: false, message: err.message });
+    }
 });
 
 // ===== TOKEN =====
