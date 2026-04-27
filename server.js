@@ -1,5 +1,6 @@
 const express = require("express");
 const cors = require("cors");
+const multer = require("multer");
 const { MongoClient } = require("mongodb");
 
 const app = express();
@@ -13,17 +14,24 @@ const ADMIN_KEY = "13102009";
 app.use((req, res, next) => {
     if (!MAINTENANCE_MODE) return next();
 
-    // ✅ cho file tĩnh
-    if (req.path.includes(".")) return next();
-
-    // ✅ cho API chạy bình thường
-    if (req.path.startsWith("/api")) return next();
-
-    // ✅ admin bypass
+    // cho ADMIN vào bằng key
     if (req.query.key === ADMIN_KEY) return next();
 
+    // cho API chạy (RẤT QUAN TRỌNG)
+    if (req.path.startsWith("/api") ||
+        req.path === "/upload-acc" ||
+        req.path === "/shop-acc" ||
+        req.path === "/get-code" ||
+        req.path === "/submit-code" ||
+        req.path === "/spin-wheel"
+    ) return next();
+
+    // cho file tĩnh (css, js, ảnh)
+    if (req.path.includes(".")) return next();
+
+    // còn lại thì chặn
     return res.send(`
-        <h1 style="text-align:center;margin-top:100px;">
+        <h1 style="text-align:center;margin-top:50px">
         🚧 Web đang bảo trì
         </h1>
     `);
@@ -99,28 +107,38 @@ function generateCode() {
 
 // ================= API =================
 
+app.get("/shop-acc", async (req, res) => {
+    try {
+        const data = await shopCollection.find().sort({ createdAt: -1 }).toArray();
+        res.json(data);
+    } catch {
+        res.json([]);
+    }
+});
+
 // ===== TOKEN =====
 app.get("/create-token", (req, res) => {
     res.json({ token: Math.random().toString(36).substring(2) + Date.now() });
 });
 
 // ===== UPLOAD SHOP (ADMIN ONLY) =====
-app.post("/upload-acc", async (req, res) => {
+
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
+
+app.post("/upload-acc", upload.single("image"), async (req, res) => {
     try {
-        await waitForDB();
+        const file = req.file;
+        const { price } = req.body;
 
-        if (req.query.key !== ADMIN_KEY) {
-            return res.json({ success: false, message: "Không có quyền" });
-        }
-
-        const { image, price } = req.body;
-
-        if (!image || !price) {
+        if (!file || !price) {
             return res.json({ success: false, message: "Thiếu dữ liệu" });
         }
 
+        const base64 = `data:${file.mimetype};base64,${file.buffer.toString("base64")}`;
+
         await shopCollection.insertOne({
-            image,
+            image: base64,
             price,
             createdAt: new Date()
         });
@@ -128,7 +146,7 @@ app.post("/upload-acc", async (req, res) => {
         res.json({ success: true });
 
     } catch (err) {
-        console.error("upload-acc:", err);
+        console.error(err);
         res.json({ success: false });
     }
 });
