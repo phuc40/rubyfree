@@ -1,3 +1,22 @@
+const MAINTENANCE_MODE = true;
+const ADMIN_KEY = "13102009"; // tự đặt
+
+app.use((req, res, next) => {
+    if (!MAINTENANCE_MODE) return next();
+
+    const key = req.query.key;
+
+    if (key === ADMIN_KEY) {
+        return next();
+    }
+
+    return res.send(`
+        <h1 style="text-align:center;margin-top:100px;">
+        🚧 Web đang bảo trì
+        </h1>
+    `);
+});
+
 const express = require("express");
 const cors = require("cors");
 const { MongoClient } = require("mongodb");
