@@ -10,30 +10,16 @@ const ADMIN_KEY = "13102009";
 app.use((req, res, next) => {
     if (!MAINTENANCE_MODE) return next();
 
-    // ✅ Cho phép file tĩnh (css, js, ảnh)
-    if (
-        req.path.startsWith("/style") ||
-        req.path.startsWith("/script") ||
-        req.path.startsWith("/images") ||
-        req.path.endsWith(".css") ||
-        req.path.endsWith(".js") ||
-        req.path.endsWith(".png") ||
-        req.path.endsWith(".jpg") ||
-        req.path.endsWith(".jpeg")
-    ) {
-        return next();
-    }
+    // cho file tĩnh
+    if (req.path.includes(".")) return next();
 
-    // ✅ Cho admin vào
-    if (req.query.key === ADMIN_KEY) {
-        return next();
-    }
+    // cho API chạy bình thường
+    if (req.path.startsWith("/")) return next();
 
-    return res.send(`
-        <h1 style="text-align:center;margin-top:100px;">
-        🚧 Web đang bảo trì
-        </h1>
-    `);
+    // chỉ chặn web
+    if (req.query.key === ADMIN_KEY) return next();
+
+    return res.send("🚧 Web đang bảo trì");
 });
 
 app.set("trust proxy", true);
