@@ -237,25 +237,33 @@ function closeShop() {
 }
 
 async function loadShop() {
-    const res = await fetch("/shop-acc");
-    const data = await res.json();
+    try {
+        const res = await fetch("/shop-acc");
 
-    const container = document.getElementById("shopList");
+        if (!res.ok) throw new Error("API lỗi");
 
-    if (!data.length) {
-        container.innerHTML = "<p>Chưa có acc</p>";
-        return;
+        const data = await res.json();
+
+        const container = document.getElementById("shopList");
+
+        if (!data.length) {
+            container.innerHTML = "<p>Chưa có acc</p>";
+            return;
+        }
+
+        container.innerHTML = data.map(acc => `
+            <div class="shop-item">
+                <img src="${acc.image}" style="aspect-ratio:16/9;object-fit:cover;width:100%">
+                <div class="shop-price">${acc.price}</div>
+                <button onclick="buyAcc()">Mua</button>
+            </div>
+        `).join("");
+
+    } catch (err) {
+        console.log(err);
     }
-
-    container.innerHTML = data.map(acc => `
-        <div class="shop-item">
-            <img src="${acc.image}" />
-            <div class="shop-price">${acc.price}</div>
-            <button class="buy-btn" onclick="buyAcc()">Mua</button>
-        </div>
-    `).join("");
 }
 
 function buyAcc() {
-    window.open("https://discord.com/users/1201014400350429284", "_blank");
+    window.open("https://discord.com/users/1201014400350429284");
 }
