@@ -388,3 +388,62 @@ button:hover {
     background: linear-gradient(90deg,#22c55e,#16a34a);
     cursor: pointer;
 }
+
+.shop-wrapper{
+    position:relative;
+    overflow:hidden;
+    margin-top:25px;
+}
+
+/* slider ngang */
+.shop-slider{
+    display:flex;
+    gap:20px;
+    overflow-x:auto;
+    scroll-behavior:smooth;
+    padding:10px;
+}
+
+/* ẩn thanh scroll */
+.shop-slider::-webkit-scrollbar{
+    display:none;
+}
+
+/* mỗi item KHÔNG bị co */
+.item{
+    min-width:300px; /* 👈 giữ size cố định */
+    max-width:300px;
+    flex-shrink:0;   /* 👈 không cho co */
+
+    background:rgba(15,23,42,0.6);
+    border-radius:16px;
+    overflow:hidden;
+}
+
+/* ảnh giữ nguyên đẹp */
+.item img{
+    width:100%;
+    aspect-ratio:16/9;
+    object-fit:cover;
+}
+
+/* nút điều hướng */
+.nav-btn{
+    position:absolute;
+    top:50%;
+    transform:translateY(-50%);
+    z-index:10;
+
+    width:40px;
+    height:40px;
+    border-radius:50%;
+    border:none;
+
+    background:rgba(0,0,0,0.6);
+    color:white;
+    font-size:22px;
+    cursor:pointer;
+}
+
+.left{ left:5px; }
+.right{ right:5px; }
