@@ -1,199 +1,214 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <title>Admin Upload Acc</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<title>Admin Shop Acc</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <style>
-        /* ===== RESET ===== */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
 
-        body {
-            font-family: Inter, -apple-system, sans-serif;
-            background: radial-gradient(circle at top, #0f172a, #020617 70%);
-            color: #e5e7eb;
+body{
+    font-family:Inter;
+    background:radial-gradient(circle at top,#0f172a,#020617 70%);
+    color:#e5e7eb;
+    padding:20px;
+}
 
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-        }
+/* ===== CONTAINER ===== */
+.container{
+    max-width:900px;
+    margin:auto;
+}
 
-        /* ===== CONTAINER ===== */
-        .container {
-            width: 100%;
-            max-width: 420px;
-            padding: 30px;
+/* ===== CARD ===== */
+.card{
+    background:rgba(15,23,42,.6);
+    padding:20px;
+    border-radius:20px;
+    margin-bottom:20px;
+    border:1px solid rgba(255,255,255,.06);
+}
 
-            border-radius: 20px;
-            background: rgba(15, 23, 42, 0.6);
-            backdrop-filter: blur(25px);
+/* ===== TITLE ===== */
+h1{
+    text-align:center;
+    margin-bottom:20px;
+    background:linear-gradient(90deg,#60a5fa,#a78bfa);
+    -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;
+}
 
-            border: 1px solid rgba(255,255,255,0.06);
+/* ===== INPUT ===== */
+input{
+    width:100%;
+    padding:10px;
+    margin-bottom:10px;
+    border-radius:10px;
+    border:1px solid rgba(255,255,255,.1);
+    background:#020617;
+    color:white;
+}
 
-            box-shadow: 
-                0 20px 60px rgba(0,0,0,0.8),
-                0 0 40px rgba(59,130,246,0.1);
-        }
+/* ===== BUTTON ===== */
+button{
+    padding:10px;
+    border:none;
+    border-radius:10px;
+    cursor:pointer;
+    color:white;
+    background:linear-gradient(90deg,#3b82f6,#6366f1);
+}
 
-        /* ===== TITLE ===== */
-        h1 {
-            text-align: center;
-            margin-bottom: 20px;
+button:hover{
+    transform:translateY(-2px);
+}
 
-            font-size: 22px;
-            font-weight: 600;
+/* ===== GRID ===== */
+.grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(250px,1fr));
+    gap:15px;
+}
 
-            background: linear-gradient(90deg, #60a5fa, #a78bfa);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
+/* ===== ITEM ===== */
+.item{
+    background:#020617;
+    border-radius:15px;
+    overflow:hidden;
+    border:1px solid rgba(255,255,255,.08);
+}
 
-        /* ===== FORM ===== */
-        .form-group {
-            margin-bottom: 15px;
-        }
+/* 🔥 16:9 IMAGE */
+.item img{
+    width:100%;
+    aspect-ratio:16/9;
+    object-fit:cover;
+}
 
-        label {
-            font-size: 13px;
-            color: #9ca3af;
-            display: block;
-            margin-bottom: 6px;
-        }
+/* ===== INFO ===== */
+.info{
+    padding:10px;
+}
 
-        input[type="file"],
-        input[type="text"] {
-            width: 100%;
-            padding: 10px;
-            border-radius: 10px;
+.price{
+    font-weight:bold;
+    margin-bottom:10px;
+}
 
-            background: rgba(2,6,23,0.8);
-            border: 1px solid rgba(255,255,255,0.08);
+/* ===== ACTIONS ===== */
+.actions{
+    display:flex;
+    gap:5px;
+}
 
-            color: white;
-        }
+.delete{background:#ef4444}
+.edit{background:#22c55e}
 
-        /* ===== PREVIEW ===== */
-        .preview {
-            margin-top: 10px;
-            text-align: center;
-        }
-
-        .preview img {
-            width: 100%;
-            max-height: 200px;
-            object-fit: cover;
-            border-radius: 12px;
-            border: 1px solid rgba(255,255,255,0.1);
-        }
-
-        /* ===== BUTTON ===== */
-        button {
-            width: 100%;
-            padding: 12px;
-            border-radius: 12px;
-            border: none;
-
-            background: linear-gradient(90deg, #3b82f6, #6366f1);
-            color: white;
-
-            font-size: 14px;
-            cursor: pointer;
-
-            transition: 0.25s;
-            box-shadow: 0 10px 25px rgba(59,130,246,0.3);
-        }
-
-        button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 15px 35px rgba(99,102,241,0.5);
-        }
-
-        /* ===== STATUS ===== */
-        .status {
-            margin-top: 12px;
-            text-align: center;
-            font-size: 13px;
-        }
-
-        .success { color: #4ade80; }
-        .error { color: #f87171; }
-
-    </style>
+</style>
 </head>
 
 <body>
 
 <div class="container">
-    <h1>🛠 Upload Acc</h1>
 
-    <form id="uploadForm">
-        <div class="form-group">
-            <label>📸 Chọn ảnh acc</label>
-            <input type="file" name="image" id="imageInput" required>
-        </div>
+<h1>🛠 Admin Shop Acc</h1>
 
-        <div class="preview" id="preview"></div>
+<!-- ===== UPLOAD ===== -->
+<div class="card">
+    <input type="file" id="image">
+    <input type="text" id="price" placeholder="Giá (VD: 100k)">
+    <button onclick="upload()">Upload</button>
+    <p id="status"></p>
+</div>
 
-        <div class="form-group">
-            <label>💰 Giá</label>
-            <input type="text" name="price" placeholder="VD: 100k" required>
-        </div>
+<!-- ===== LIST ===== -->
+<div class="card">
+    <h2>📦 Danh sách acc</h2>
+    <div id="list" class="grid"></div>
+</div>
 
-        <button type="submit">🚀 Upload</button>
-    </form>
-
-    <div id="status" class="status"></div>
 </div>
 
 <script>
-const imageInput = document.getElementById("imageInput");
-const preview = document.getElementById("preview");
 const statusEl = document.getElementById("status");
 
-// preview ảnh
-imageInput.addEventListener("change", () => {
-    const file = imageInput.files[0];
+async function upload(){
+    const file = document.getElementById("image").files[0];
+    const price = document.getElementById("price").value;
 
-    if (!file) return;
+    if(!file || !price){
+        return alert("Thiếu dữ liệu");
+    }
 
-    const reader = new FileReader();
-    reader.onload = e => {
-        preview.innerHTML = `<img src="${e.target.result}">`;
-    };
-    reader.readAsDataURL(file);
-});
+    const formData = new FormData();
+    formData.append("image", file);
+    formData.append("price", price);
 
-// upload
-document.getElementById("uploadForm").onsubmit = async (e) => {
-    e.preventDefault();
-
-    const formData = new FormData(e.target);
-
-    const res = await fetch("/upload-acc", {
-        method: "POST",
-        body: formData
+    const res = await fetch("/upload-acc",{
+        method:"POST",
+        body:formData
     });
 
     const data = await res.json();
 
-    if (data.success) {
-        statusEl.innerText = "✅ Upload thành công!";
-        statusEl.className = "status success";
-
-        e.target.reset();
-        preview.innerHTML = "";
-
-    } else {
-        statusEl.innerText = "❌ Upload lỗi!";
-        statusEl.className = "status error";
+    if(data.success){
+        statusEl.innerText="✅ Upload thành công";
+        load();
+    }else{
+        statusEl.innerText="❌ Lỗi";
     }
-};
+}
+
+/* ===== LOAD LIST ===== */
+async function load(){
+    const res = await fetch("/shop-acc");
+    const data = await res.json();
+
+    const list = document.getElementById("list");
+
+    list.innerHTML = data.map(acc => `
+        <div class="item">
+            <img src="${acc.image}">
+            <div class="info">
+                <div class="price">${acc.price}</div>
+                <div class="actions">
+                    <button class="edit" onclick="edit('${acc._id}')">Sửa</button>
+                    <button class="delete" onclick="remove('${acc._id}')">Xoá</button>
+                </div>
+            </div>
+        </div>
+    `).join("");
+}
+
+/* ===== DELETE ===== */
+async function remove(id){
+    if(!confirm("Xoá acc này?")) return;
+
+    await fetch("/delete-acc",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({id})
+    });
+
+    load();
+}
+
+/* ===== EDIT ===== */
+async function edit(id){
+    const newPrice = prompt("Nhập giá mới:");
+    if(!newPrice) return;
+
+    await fetch("/update-acc",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({id, price:newPrice})
+    });
+
+    load();
+}
+
+load();
 </script>
 
 </body>
