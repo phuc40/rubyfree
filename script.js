@@ -269,3 +269,14 @@ async function loadShop() {
 function buyAcc() {
     window.open("https://discord.com/users/1201014400350429284");
 }
+
+function scrollShop(direction){
+    const container = document.getElementById("list");
+
+    const scrollAmount = 320; // = width item + gap
+
+    container.scrollBy({
+        left: direction * scrollAmount,
+        behavior: "smooth"
+    });
+}
