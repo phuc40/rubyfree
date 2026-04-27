@@ -3,57 +3,90 @@ const cors = require("cors");
 const { MongoClient } = require("mongodb");
 
 const app = express();
+app.set("trust proxy", true);
 
+// ===== CONFIG =====
 const MAINTENANCE_MODE = true;
 const ADMIN_KEY = "13102009";
 
+// ===== MIDDLEWARE BẢO TRÌ =====
 app.use((req, res, next) => {
     if (!MAINTENANCE_MODE) return next();
 
-    // cho file tĩnh
+    // ✅ cho file tĩnh
     if (req.path.includes(".")) return next();
 
-    // cho API chạy bình thường
-    if (req.path.startsWith("/")) return next();
+    // ✅ cho API chạy bình thường
+    if (req.path.startsWith("/api")) return next();
 
-    // chỉ chặn web
+    // ✅ admin bypass
     if (req.query.key === ADMIN_KEY) return next();
 
-    return res.send("🚧 Web đang bảo trì");
+    return res.send(`
+        <h1 style="text-align:center;margin-top:100px;">
+        🚧 Web đang bảo trì
+        </h1>
+    `);
 });
 
-app.set("trust proxy", true);
-
-app.use(cors({
-    origin: "*",
-    methods: ["GET", "POST"]
-}));
-
+// ===== MIDDLEWARE =====
+app.use(cors({ origin: "*", methods: ["GET", "POST"] }));
 app.use(express.json());
 app.use(express.static(__dirname));
 
-// ===== MongoDB =====
-const MONGODB_URI = process.env.MONGODB_URI || 
+// ===== MONGODB =====
+const MONGODB_URI = process.env.MONGODB_URI ||
 "mongodb+srv://busidolnew:busidol123@cluster0.ejinj73.mongodb.net/?appName=Cluster0";
-
-let db, usersCollection, codesCollection, submittedCodesCollection, spinsCollection;
 
 const client = new MongoClient(MONGODB_URI);
 
-// ===== LẤY IP CHUẨN =====
-function getRealIP(req) {
-    let ip =
-        req.headers["cf-connecting-ip"] ||
-        req.headers["x-forwarded-for"]?.split(",")[0] ||
-        req.ip ||
-        req.socket.remoteAddress;
+let db, usersCollection, codesCollection, submittedCodesCollection, spinsCollection, shopCollection;
+let dbReady = false;
 
-    if (!ip) return "unknown";
-    if (ip.startsWith("::ffff:")) ip = ip.replace("::ffff:", "");
-    return ip;
+// ===== CONNECT DB =====
+async function connectDB() {
+    try {
+        await client.connect();
+        db = client.db("rubyfree");
+
+        usersCollection = db.collection("users");
+        codesCollection = db.collection("codes");
+        submittedCodesCollection = db.collection("submittedCodes");
+        spinsCollection = db.collection("spins");
+        shopCollection = db.collection("shop");
+
+        dbReady = true;
+        console.log("✅ MongoDB connected");
+
+        // ===== ANTI-SPAM INDEX =====
+        await submittedCodesCollection.createIndex({ deviceId: 1 }, { unique: true, sparse: true });
+        await submittedCodesCollection.createIndex({ ip: 1 }, { unique: true, sparse: true });
+        await submittedCodesCollection.createIndex({ userAgent: 1 }, { unique: true, sparse: true });
+
+        console.log("🔥 Anti-spam index ready");
+
+    } catch (err) {
+        console.error("❌ MongoDB error:", err);
+    }
+}
+connectDB();
+
+// ===== WAIT DB =====
+async function waitForDB() {
+    let retries = 0;
+    while (!dbReady && retries < 20) {
+        await new Promise(r => setTimeout(r, 500));
+        retries++;
+    }
+    if (!dbReady) throw new Error("DB not ready");
 }
 
 // ===== HELPER =====
+function getIP(req) {
+    return req.headers["x-forwarded-for"]?.split(",")[0] ||
+           req.socket.remoteAddress || "unknown";
+}
+
 function generateCode() {
     const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
     let code = "";
@@ -64,232 +97,155 @@ function generateCode() {
     return code;
 }
 
+// ================= API =================
+
 // ===== TOKEN =====
 app.get("/create-token", (req, res) => {
-    const token = Math.random().toString(36).substring(2) + Date.now();
-    res.json({ token });
+    res.json({ token: Math.random().toString(36).substring(2) + Date.now() });
+});
+
+// ===== UPLOAD SHOP (ADMIN ONLY) =====
+app.post("/upload-acc", async (req, res) => {
+    try {
+        await waitForDB();
+
+        if (req.query.key !== ADMIN_KEY) {
+            return res.json({ success: false, message: "Không có quyền" });
+        }
+
+        const { image, price } = req.body;
+
+        if (!image || !price) {
+            return res.json({ success: false, message: "Thiếu dữ liệu" });
+        }
+
+        await shopCollection.insertOne({
+            image,
+            price,
+            createdAt: new Date()
+        });
+
+        res.json({ success: true });
+
+    } catch (err) {
+        console.error("upload-acc:", err);
+        res.json({ success: false });
+    }
+});
+
+// ===== GET SHOP =====
+app.get("/shop-accs", async (req, res) => {
+    try {
+        await waitForDB();
+        const data = await shopCollection.find().sort({ createdAt: -1 }).toArray();
+        res.json(data);
+    } catch {
+        res.json([]);
+    }
 });
 
 // ===== GET CODE =====
 app.post("/get-code", async (req, res) => {
     try {
+        await waitForDB();
+
         const { deviceId } = req.body;
-        const ip = getRealIP(req);
+        const ip = getIP(req);
 
-        if (!deviceId) {
-            return res.json({ success: false, message: "Thiếu deviceId" });
-        }
-
-        const existingUser = await usersCollection.findOne({ deviceId });
-
-        if (existingUser) {
-            return res.json({
-                success: false,
-                message: "Bạn đã nhận mã rồi!",
-                code: existingUser.code
-            });
+        const exist = await usersCollection.findOne({ deviceId });
+        if (exist) {
+            return res.json({ success: false, code: exist.code });
         }
 
         const code = generateCode();
 
-        await usersCollection.insertOne({
-            deviceId,
-            code,
-            ip,
-            time: new Date()
-        });
-
-        await codesCollection.insertOne({
-            code,
-            deviceId,
-            ip,
-            time: new Date()
-        });
+        await usersCollection.insertOne({ deviceId, code, ip });
+        await codesCollection.insertOne({ deviceId, code, ip });
 
         res.json({ success: true, code });
 
     } catch (err) {
-        console.error("get-code:", err);
-        res.json({ success: false, message: err.message });
-    }
-});
-
-app.get("/submitted-codes", (req, res) => {
-    res.sendFile(__dirname + "/submitted-codes.html");
-});
-
-app.get("/submitted-codes-api", async (req, res) => {
-    try {
-        const data = await submittedCodesCollection
-            .find({})
-            .sort({ confirmedAt: -1 })
-            .toArray();
-
-        res.json(data);
-    } catch (err) {
-        console.error("submitted-codes-api:", err);
-        res.json([]);
+        res.json({ success: false });
     }
 });
 
 // ===== SUBMIT CODE =====
 app.post("/submit-code", async (req, res) => {
     try {
-        const { deviceId, userId, platform, userInputCode, systemCode, timestamp } = req.body;
-        const ip = getRealIP(req);
-        const userAgent = req.headers["user-agent"] || "unknown";
+        await waitForDB();
 
-        if (!deviceId || !userId || !platform || !userInputCode) {
-            return res.json({ success: false, message: "Thiếu dữ liệu" });
-        }
-
-        const validPlatforms = ["AMO", "ATV", "LG"];
-        if (!validPlatforms.includes(platform)) {
-            return res.json({ success: false, message: "Platform không hợp lệ" });
-        }
+        const { deviceId, userId, platform, userInputCode, systemCode } = req.body;
+        const ip = getIP(req);
+        const userAgent = req.headers["user-agent"];
 
         if (userInputCode.toUpperCase() !== systemCode.toUpperCase()) {
-            return res.json({ success: false, message: "Sai mã!" });
+            return res.json({ success: false, message: "Sai mã" });
         }
 
-        // 🔥 CHECK SPAM (3 lớp)
-        const existing = await submittedCodesCollection.findOne({
-            $or: [
-                { deviceId },
-                { ip },
-                { userAgent }
-            ]
+        const exist = await submittedCodesCollection.findOne({
+            $or: [{ deviceId }, { ip }, { userAgent }]
         });
 
-        if (existing) {
-            return res.json({
-                success: false,
-                message: "❌ Bạn đã gửi mã rồi!"
-            });
+        if (exist) {
+            return res.json({ success: false, message: "Đã gửi rồi" });
         }
 
-        // ✅ INSERT
         await submittedCodesCollection.insertOne({
             deviceId,
             userId,
             platform,
-            code: userInputCode.toUpperCase(),
+            code: userInputCode,
             ip,
             userAgent,
-            timestamp,
-            confirmedAt: new Date()
+            createdAt: new Date()
         });
 
         res.json({ success: true });
 
-    } catch (err) {
-        console.error("submit-code:", err);
-        res.json({ success: false, message: err.message });
+    } catch {
+        res.json({ success: false });
     }
 });
 
-// ===== 🎯 SPIN WHEEL (KHÓA IP + DEVICE + FINGERPRINT) =====
+// ===== SPIN =====
 app.post("/spin-wheel", async (req, res) => {
     try {
-        const { deviceId, fingerprint } = req.body;
-        const ip = getRealIP(req);
+        await waitForDB();
 
-        const now = Date.now();
+        const { deviceId } = req.body;
+        const ip = getIP(req);
+
         const cooldown = 6 * 60 * 60 * 1000;
+        const now = Date.now();
 
-        // 🔥 tìm theo cả 3
-        const existing = await spinsCollection.findOne({
-            $or: [
-                { ip },
-                { deviceId },
-                { fingerprint }
-            ]
+        const exist = await spinsCollection.findOne({
+            $or: [{ deviceId }, { ip }]
         });
 
-        if (existing) {
-            const diff = now - existing.lastSpin;
-
-            if (diff < cooldown) {
-                return res.json({
-                    success: false,
-                    remain: cooldown - diff,
-                    message: "Đã quay rồi"
-                });
-            }
+        if (exist && now - exist.lastSpin < cooldown) {
+            return res.json({ success: false });
         }
 
-        const characters = [
-            "Ace","Echo","Smart","Khan","Lucy Băng","Lucy Idol",
-            "Ruby","Bensi","Gin","Jey","Koo","Thrue","Bebee","Gold"
-        ];
-
-        const result = characters[Math.floor(Math.random() * characters.length)];
+        const list = ["Ace","Echo","Smart","Khan","Lucy Băng","Lucy Idol",
+            "Ruby","Bensi","Gin","Jey","Koo","Thrue","Bebee","Gold"];
+        const result = list[Math.floor(Math.random() * list.length)];
 
         await spinsCollection.insertOne({
-            ip,
             deviceId,
-            fingerprint,
+            ip,
             lastSpin: now,
-            lastResult: result
+            result
         });
 
         res.json({ success: true, result });
 
-    } catch (err) {
-        console.error("spin-wheel:", err);
-        res.json({ success: false, message: "Lỗi server" });
+    } catch {
+        res.json({ success: false });
     }
 });
 
-// ===== START SERVER =====
-async function startServer() {
-    try {
-        await client.connect();
-
-        db = client.db("rubyfree");
-
-        usersCollection = db.collection("users");
-        codesCollection = db.collection("codes");
-        submittedCodesCollection = db.collection("submittedCodes");
-        spinsCollection = db.collection("spins");
-
-        console.log("✅ MongoDB connected");
-
-        // ================= 🔥 ANTI-SPAM INDEX =================
-
-        // chỉ index khi field tồn tại (tránh null lỗi)
-        await submittedCodesCollection.createIndex(
-            { deviceId: 1 },
-            { unique: true, sparse: true }
-        );
-
-        await submittedCodesCollection.createIndex(
-            { ip: 1 },
-            { unique: true, sparse: true }
-        );
-
-        await submittedCodesCollection.createIndex(
-            { userAgent: 1 },
-            { unique: true, sparse: true }
-        );
-
-        await submittedCodesCollection.createIndex(
-            { fingerprint: 1 },
-            { unique: true, sparse: true }
-        );
-
-        console.log("🔥 Anti-spam index ready");
-
-        // ================= START SERVER =================
-        const PORT = process.env.PORT || 3000;
-        app.listen(PORT, () => {
-            console.log(`🚀 Server chạy tại http://localhost:${PORT}`);
-        });
-
-    } catch (err) {
-        console.error("❌ MongoDB connect fail:", err);
-        process.exit(1);
-    }
-}
-
-startServer();
+// ===== START =====
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log("🚀 Server running:", PORT);
+});
