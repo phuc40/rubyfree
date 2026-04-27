@@ -5,14 +5,27 @@ const { MongoClient } = require("mongodb");
 const app = express();
 
 const MAINTENANCE_MODE = true;
-const ADMIN_KEY = "13102009"; // tự đặt
+const ADMIN_KEY = "13102009";
 
 app.use((req, res, next) => {
     if (!MAINTENANCE_MODE) return next();
 
-    const key = req.query.key;
+    // ✅ Cho phép file tĩnh (css, js, ảnh)
+    if (
+        req.path.startsWith("/style") ||
+        req.path.startsWith("/script") ||
+        req.path.startsWith("/images") ||
+        req.path.endsWith(".css") ||
+        req.path.endsWith(".js") ||
+        req.path.endsWith(".png") ||
+        req.path.endsWith(".jpg") ||
+        req.path.endsWith(".jpeg")
+    ) {
+        return next();
+    }
 
-    if (key === ADMIN_KEY) {
+    // ✅ Cho admin vào
+    if (req.query.key === ADMIN_KEY) {
         return next();
     }
 
