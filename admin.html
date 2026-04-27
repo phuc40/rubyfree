@@ -43,6 +43,20 @@ input{
     color:white;
 }
 
+/* ===== PREVIEW ===== */
+#previewBox{
+    display:none;
+    margin-bottom:15px;
+}
+
+#preview{
+    width:100%;
+    aspect-ratio:16/9;
+    object-fit:cover;
+    border-radius:12px;
+    border:1px solid rgba(255,255,255,0.1);
+}
+
 /* ===== BUTTON ===== */
 button{
     padding:10px 14px;
@@ -87,7 +101,7 @@ button:hover{
     box-shadow:0 20px 40px rgba(0,0,0,0.6);
 }
 
-/* ===== IMAGE (16:9 chuẩn youtube) ===== */
+/* ===== IMAGE ===== */
 .item img{
     width:100%;
     aspect-ratio:16/9;
@@ -105,7 +119,7 @@ button:hover{
     margin-bottom:10px;
 }
 
-/* ===== ACTION BUTTONS ===== */
+/* ===== ACTION ===== */
 .actions{
     display:flex;
     gap:8px;
@@ -118,14 +132,6 @@ button:hover{
 .edit{
     background:#22c55e;
 }
-
-.delete:hover{
-    box-shadow:0 10px 25px rgba(239,68,68,0.5);
-}
-
-.edit:hover{
-    box-shadow:0 10px 25px rgba(34,197,94,0.5);
-}
 </style>
 </head>
 
@@ -133,19 +139,44 @@ button:hover{
 
 <h1>ADMIN SHOP</h1>
 
-<input type="file" id="image">
+<input type="file" id="image" accept="image/*" onchange="previewImage()">
+
+<div id="previewBox">
+    <img id="preview">
+</div>
+
 <input type="text" id="price" placeholder="Giá">
+
 <button onclick="upload()">Upload</button>
 
 <div id="list" class="grid"></div>
 
 <script>
+function previewImage(){
+    const file = document.getElementById("image").files[0];
+    if(!file) return;
+
+    const reader = new FileReader();
+
+    reader.onload = function(e){
+        document.getElementById("preview").src = e.target.result;
+        document.getElementById("previewBox").style.display = "block";
+    };
+
+    reader.readAsDataURL(file);
+}
+
 async function upload(){
     const file = document.getElementById("image").files[0];
     const price = document.getElementById("price").value;
 
     if(!file || !price){
         return alert("Thiếu dữ liệu");
+    }
+
+    // giới hạn 2MB
+    if(file.size > 2 * 1024 * 1024){
+        return alert("Ảnh tối đa 2MB");
     }
 
     const form = new FormData();
@@ -156,6 +187,11 @@ async function upload(){
         method:"POST",
         body:form
     });
+
+    // reset
+    document.getElementById("image").value = "";
+    document.getElementById("price").value = "";
+    document.getElementById("previewBox").style.display = "none";
 
     load();
 }
@@ -168,9 +204,11 @@ async function load(){
         <div class="item">
             <img src="${acc.image}">
             <div class="info">
-                <b>${acc.price}</b><br>
-                <button class="edit" onclick="edit('${acc._id}')">Sửa</button>
-                <button class="delete" onclick="remove('${acc._id}')">Xoá</button>
+                <b>${acc.price}</b>
+                <div class="actions">
+                    <button class="edit" onclick="edit('${acc._id}')">Sửa</button>
+                    <button class="delete" onclick="remove('${acc._id}')">Xoá</button>
+                </div>
             </div>
         </div>
     `).join("");
@@ -194,6 +232,7 @@ async function edit(id){
         headers:{'Content-Type':'application/json'},
         body:JSON.stringify({id, price})
     });
+
     load();
 }
 
