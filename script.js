@@ -227,6 +227,15 @@ window.addEventListener("load", () => {
     createWheelItems();
 });
 
+function openShop() {
+    document.getElementById("shopModal").style.display = "flex";
+    loadShop();
+}
+
+function closeShop() {
+    document.getElementById("shopModal").style.display = "none";
+}
+
 let shopData = [];
 let currentIndex = 0;
 
