@@ -14,24 +14,25 @@ const ADMIN_KEY = "13102009";
 app.use((req, res, next) => {
     if (!MAINTENANCE_MODE) return next();
 
-    // cho ADMIN vào bằng key
+    // ✅ admin vào
     if (req.query.key === ADMIN_KEY) return next();
 
-    // cho API chạy (RẤT QUAN TRỌNG)
-    if (req.path.startsWith("/api") ||
-        req.path === "/upload-acc" ||
-        req.path === "/shop-acc" ||
-        req.path === "/delete-acc" ||
-        req.path === "/update-acc" ||
-        req.path === "/get-code" ||
-        req.path === "/submit-code" ||
-        req.path === "/spin-wheel"
+    // ✅ cho tất cả API chạy
+    if (
+        req.path.startsWith("/upload-") ||
+        req.path.startsWith("/delete-") ||
+        req.path.startsWith("/update-") ||
+        req.path.startsWith("/shop") ||
+        req.path.startsWith("/get-") ||
+        req.path.startsWith("/submit-") ||
+        req.path.startsWith("/spin-") ||
+        req.path.startsWith("/create-")
     ) return next();
 
-    // cho file tĩnh (css, js, ảnh)
+    // ✅ file tĩnh
     if (req.path.includes(".")) return next();
 
-    // còn lại thì chặn
+    // ❌ còn lại chặn
     return res.send(`
         <h1 style="text-align:center;margin-top:50px">
         🚧 Web đang bảo trì
@@ -169,17 +170,6 @@ app.post("/upload-acc", upload.single("image"), async (req, res) => {
     } catch (err) {
         console.error(err);
         res.json({ success: false });
-    }
-});
-
-// ===== GET SHOP =====
-app.get("/shop-accs", async (req, res) => {
-    try {
-        await waitForDB();
-        const data = await shopCollection.find().sort({ createdAt: -1 }).toArray();
-        res.json(data);
-    } catch {
-        res.json([]);
     }
 });
 
