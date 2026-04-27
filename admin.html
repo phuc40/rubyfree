@@ -174,11 +174,6 @@ async function upload(){
         return alert("Thiếu dữ liệu");
     }
 
-    // giới hạn 2MB
-    if(file.size > 2 * 1024 * 1024){
-        return alert("Ảnh tối đa 2MB");
-    }
-
     const form = new FormData();
     form.append("image", file);
     form.append("price", price);
