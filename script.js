@@ -240,16 +240,24 @@ let shopData = [];
 let currentIndex = 0;
 
 async function loadShop() {
-    const res = await fetch("/shop-acc");
-    shopData = await res.json();
+    try {
+        const res = await fetch("/shop-acc");
 
-    if (!shopData.length) {
-        document.getElementById("shopSingle").innerHTML = "<p>Chưa có acc</p>";
-        return;
+        if (!res.ok) throw new Error("API lỗi");
+
+        shopData = await res.json();
+
+        if (!shopData.length) {
+            document.getElementById("shopSingle").innerHTML = "<p>Chưa có acc</p>";
+            return;
+        }
+
+        currentIndex = 0;
+        renderShop();
+
+    } catch (err) {
+        console.log(err);
     }
-
-    currentIndex = 0;
-    renderShop();
 }
 
 function renderShop(){
@@ -280,4 +288,8 @@ function prevAcc(){
     if (currentIndex < 0) currentIndex = shopData.length - 1;
 
     renderShop();
+}
+
+function buyAcc() {
+    window.open("https://discord.com/users/1201014400350429284");
 }
