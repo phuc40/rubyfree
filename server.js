@@ -7,7 +7,7 @@ const app = express();
 app.set("trust proxy", true);
 
 // ===== CONFIG =====
-const MAINTENANCE_MODE = false;
+const MAINTENANCE_MODE = true;
 const ADMIN_KEY = "13102009";
 
 // ===== MIDDLEWARE BẢO TRÌ =====
