@@ -27,9 +27,9 @@ window.onload = function () {
 
     const now = Date.now();
 
-    if (now - start < 15000) return;
+    if (now - start < 20000) return;
 
-    if (now - start > 120000) {
+    if (now - start > 240000) {
         localStorage.removeItem("reward_token");
         localStorage.removeItem("start_time");
         return;
@@ -226,3 +226,36 @@ function spinWheel() {
 window.addEventListener("load", () => {
     createWheelItems();
 });
+
+function openShop() {
+    document.getElementById("shopModal").style.display = "flex";
+    loadShop();
+}
+
+function closeShop() {
+    document.getElementById("shopModal").style.display = "none";
+}
+
+async function loadShop() {
+    const res = await fetch("/shop-acc");
+    const data = await res.json();
+
+    const container = document.getElementById("shopList");
+
+    if (!data.length) {
+        container.innerHTML = "<p>Chưa có acc</p>";
+        return;
+    }
+
+    container.innerHTML = data.map(acc => `
+        <div class="shop-item">
+            <img src="${acc.image}" />
+            <div class="shop-price">${acc.price}</div>
+            <button class="buy-btn" onclick="buyAcc()">Mua</button>
+        </div>
+    `).join("");
+}
+
+function buyAcc() {
+    window.open("https://discord.com/users/1201014400350429284", "_blank");
+}
