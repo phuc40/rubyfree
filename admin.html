@@ -2,209 +2,111 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<title>Admin Shop Acc</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Shop</title>
 
 <style>
-*{margin:0;padding:0;box-sizing:border-box}
-
 body{
     font-family:Inter;
-    background:radial-gradient(circle at top,#0f172a,#020617 70%);
-    color:#e5e7eb;
-    padding:20px;
-}
-
-/* ===== CONTAINER ===== */
-.container{
-    max-width:900px;
-    margin:auto;
-}
-
-/* ===== CARD ===== */
-.card{
-    background:rgba(15,23,42,.6);
-    padding:20px;
-    border-radius:20px;
-    margin-bottom:20px;
-    border:1px solid rgba(255,255,255,.06);
-}
-
-/* ===== TITLE ===== */
-h1{
-    text-align:center;
-    margin-bottom:20px;
-    background:linear-gradient(90deg,#60a5fa,#a78bfa);
-    -webkit-background-clip:text;
-    -webkit-text-fill-color:transparent;
-}
-
-/* ===== INPUT ===== */
-input{
-    width:100%;
-    padding:10px;
-    margin-bottom:10px;
-    border-radius:10px;
-    border:1px solid rgba(255,255,255,.1);
     background:#020617;
     color:white;
+    padding:20px;
 }
 
-/* ===== BUTTON ===== */
-button{
-    padding:10px;
-    border:none;
-    border-radius:10px;
-    cursor:pointer;
-    color:white;
-    background:linear-gradient(90deg,#3b82f6,#6366f1);
-}
-
-button:hover{
-    transform:translateY(-2px);
-}
-
-/* ===== GRID ===== */
 .grid{
     display:grid;
     grid-template-columns:repeat(auto-fill,minmax(250px,1fr));
     gap:15px;
 }
 
-/* ===== ITEM ===== */
 .item{
-    background:#020617;
-    border-radius:15px;
+    background:#111;
+    border-radius:12px;
     overflow:hidden;
-    border:1px solid rgba(255,255,255,.08);
 }
 
-/* 🔥 16:9 IMAGE */
 .item img{
     width:100%;
     aspect-ratio:16/9;
     object-fit:cover;
 }
 
-/* ===== INFO ===== */
 .info{
     padding:10px;
 }
 
-.price{
-    font-weight:bold;
-    margin-bottom:10px;
+button{
+    margin-top:5px;
+    padding:5px 10px;
+    border:none;
+    cursor:pointer;
 }
 
-/* ===== ACTIONS ===== */
-.actions{
-    display:flex;
-    gap:5px;
-}
-
-.delete{background:#ef4444}
-.edit{background:#22c55e}
-
+.delete{background:red;color:white}
+.edit{background:green;color:white}
 </style>
 </head>
 
 <body>
 
-<div class="container">
+<h1>ADMIN SHOP</h1>
 
-<h1>🛠 Admin Shop Acc</h1>
+<input type="file" id="image">
+<input type="text" id="price" placeholder="Giá">
+<button onclick="upload()">Upload</button>
 
-<!-- ===== UPLOAD ===== -->
-<div class="card">
-    <input type="file" id="image">
-    <input type="text" id="price" placeholder="Giá (VD: 100k)">
-    <button onclick="upload()">Upload</button>
-    <p id="status"></p>
-</div>
-
-<!-- ===== LIST ===== -->
-<div class="card">
-    <h2>📦 Danh sách acc</h2>
-    <div id="list" class="grid"></div>
-</div>
-
-</div>
+<div id="list" class="grid"></div>
 
 <script>
-const statusEl = document.getElementById("status");
-
 async function upload(){
-    const file = document.getElementById("image").files[0];
-    const price = document.getElementById("price").value;
+    const file = image.files[0];
+    const price = priceInput.value;
 
-    if(!file || !price){
-        return alert("Thiếu dữ liệu");
-    }
+    const form = new FormData();
+    form.append("image", file);
+    form.append("price", price);
 
-    const formData = new FormData();
-    formData.append("image", file);
-    formData.append("price", price);
-
-    const res = await fetch("/upload-acc",{
+    await fetch("/upload-acc", {
         method:"POST",
-        body:formData
-    });
-
-    const data = await res.json();
-
-    if(data.success){
-        statusEl.innerText="✅ Upload thành công";
-        load();
-    }else{
-        statusEl.innerText="❌ Lỗi";
-    }
-}
-
-/* ===== LOAD LIST ===== */
-async function load(){
-    const res = await fetch("/shop-acc");
-    const data = await res.json();
-
-    const list = document.getElementById("list");
-
-    list.innerHTML = data.map(acc => `
-        <div class="item">
-            <img src="${acc.image}">
-            <div class="info">
-                <div class="price">${acc.price}</div>
-                <div class="actions">
-                    <button class="edit" onclick="edit('${acc._id}')">Sửa</button>
-                    <button class="delete" onclick="remove('${acc._id}')">Xoá</button>
-                </div>
-            </div>
-        </div>
-    `).join("");
-}
-
-/* ===== DELETE ===== */
-async function remove(id){
-    if(!confirm("Xoá acc này?")) return;
-
-    await fetch("/delete-acc",{
-        method:"POST",
-        headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({id})
+        body:form
     });
 
     load();
 }
 
-/* ===== EDIT ===== */
+async function load(){
+    const res = await fetch("/shop-acc");
+    const data = await res.json();
+
+    list.innerHTML = data.map(acc=>`
+        <div class="item">
+            <img src="${acc.image}">
+            <div class="info">
+                <b>${acc.price}</b><br>
+                <button class="edit" onclick="edit('${acc._id}')">Sửa</button>
+                <button class="delete" onclick="remove('${acc._id}')">Xoá</button>
+            </div>
+        </div>
+    `).join("");
+}
+
+async function remove(id){
+    await fetch("/delete-acc",{
+        method:"POST",
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({id})
+    });
+    load();
+}
+
 async function edit(id){
-    const newPrice = prompt("Nhập giá mới:");
-    if(!newPrice) return;
+    const price = prompt("Giá mới:");
+    if(!price) return;
 
     await fetch("/update-acc",{
         method:"POST",
-        headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({id, price:newPrice})
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({id, price})
     });
-
     load();
 }
 
