@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Upload Acc</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        /* ===== RESET ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Inter, -apple-system, sans-serif;
+            background: radial-gradient(circle at top, #0f172a, #020617 70%);
+            color: #e5e7eb;
+
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* ===== CONTAINER ===== */
+        .container {
+            width: 100%;
+            max-width: 420px;
+            padding: 30px;
+
+            border-radius: 20px;
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(25px);
+
+            border: 1px solid rgba(255,255,255,0.06);
+
+            box-shadow: 
+                0 20px 60px rgba(0,0,0,0.8),
+                0 0 40px rgba(59,130,246,0.1);
+        }
+
+        /* ===== TITLE ===== */
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+
+            font-size: 22px;
+            font-weight: 600;
+
+            background: linear-gradient(90deg, #60a5fa, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* ===== FORM ===== */
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            font-size: 13px;
+            color: #9ca3af;
+            display: block;
+            margin-bottom: 6px;
+        }
+
+        input[type="file"],
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            border-radius: 10px;
+
+            background: rgba(2,6,23,0.8);
+            border: 1px solid rgba(255,255,255,0.08);
+
+            color: white;
+        }
+
+        /* ===== PREVIEW ===== */
+        .preview {
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        .preview img {
+            width: 100%;
+            max-height: 200px;
+            object-fit: cover;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        /* ===== BUTTON ===== */
+        button {
+            width: 100%;
+            padding: 12px;
+            border-radius: 12px;
+            border: none;
+
+            background: linear-gradient(90deg, #3b82f6, #6366f1);
+            color: white;
+
+            font-size: 14px;
+            cursor: pointer;
+
+            transition: 0.25s;
+            box-shadow: 0 10px 25px rgba(59,130,246,0.3);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 35px rgba(99,102,241,0.5);
+        }
+
+        /* ===== STATUS ===== */
+        .status {
+            margin-top: 12px;
+            text-align: center;
+            font-size: 13px;
+        }
+
+        .success { color: #4ade80; }
+        .error { color: #f87171; }
+
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+    <h1>🛠 Upload Acc</h1>
+
+    <form id="uploadForm">
+        <div class="form-group">
+            <label>📸 Chọn ảnh acc</label>
+            <input type="file" name="image" id="imageInput" required>
+        </div>
+
+        <div class="preview" id="preview"></div>
+
+        <div class="form-group">
+            <label>💰 Giá</label>
+            <input type="text" name="price" placeholder="VD: 100k" required>
+        </div>
+
+        <button type="submit">🚀 Upload</button>
+    </form>
+
+    <div id="status" class="status"></div>
+</div>
+
+<script>
+const imageInput = document.getElementById("imageInput");
+const preview = document.getElementById("preview");
+const statusEl = document.getElementById("status");
+
+// preview ảnh
+imageInput.addEventListener("change", () => {
+    const file = imageInput.files[0];
+
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = e => {
+        preview.innerHTML = `<img src="${e.target.result}">`;
+    };
+    reader.readAsDataURL(file);
+});
+
+// upload
+document.getElementById("uploadForm").onsubmit = async (e) => {
+    e.preventDefault();
+
+    const formData = new FormData(e.target);
+
+    const res = await fetch("/upload-acc", {
+        method: "POST",
+        body: formData
+    });
+
+    const data = await res.json();
+
+    if (data.success) {
+        statusEl.innerText = "✅ Upload thành công!";
+        statusEl.className = "status success";
+
+        e.target.reset();
+        preview.innerHTML = "";
+
+    } else {
+        statusEl.innerText = "❌ Upload lỗi!";
+        statusEl.className = "status error";
+    }
+};
+</script>
+
+</body>
+</html>
