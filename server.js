@@ -261,20 +261,10 @@ app.post("/submit-code", async (req, res) => {
     }
 });
 
-app.get("/submitted-codes", async (req, res) => {
-    try {
-        await waitForDB();
+const path = require("path");
 
-        const data = await submittedCodesCollection
-            .find()
-            .sort({ createdAt: -1 })
-            .toArray();
-
-        res.json(data);
-    } catch (err) {
-        console.error(err);
-        res.json([]);
-    }
+app.get("/submitted-codes", (req, res) => {
+    res.sendFile(path.join(__dirname, "submitted-codes.html"));
 });
 
 // ===== SPIN =====
