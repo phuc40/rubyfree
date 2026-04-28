@@ -25,6 +25,7 @@ app.use((req, res, next) => {
         req.path.startsWith("/shop") ||
         req.path.startsWith("/get-") ||
         req.path.startsWith("/submit-") ||
+        req.path.startsWith("/submitted-") ||
         req.path.startsWith("/spin-") ||
         req.path.startsWith("/create-")
     ) return next();
@@ -258,6 +259,22 @@ app.post("/submit-code", async (req, res) => {
 
     } catch {
         res.json({ success: false });
+    }
+});
+
+app.get("/submitted-codes-api", async (req, res) => {
+    try {
+        await waitForDB();
+
+        const data = await submittedCodesCollection
+            .find()
+            .sort({ createdAt: -1 })
+            .toArray();
+
+        res.json(data);
+    } catch (err) {
+        console.error(err);
+        res.json([]);
     }
 });
 
