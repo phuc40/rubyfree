@@ -261,6 +261,22 @@ app.post("/submit-code", async (req, res) => {
     }
 });
 
+app.get("/submitted-codes", async (req, res) => {
+    try {
+        await waitForDB();
+
+        const data = await submittedCodesCollection
+            .find()
+            .sort({ createdAt: -1 })
+            .toArray();
+
+        res.json(data);
+    } catch (err) {
+        console.error(err);
+        res.json([]);
+    }
+});
+
 // ===== SPIN =====
 app.post("/spin-wheel", async (req, res) => {
     try {
