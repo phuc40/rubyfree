@@ -45,6 +45,7 @@ window.onload = function () {
     })
     .then(res => res.json())
     .then(data => {
+        console.log("GET CODE RESPONSE:", data);
         if (data.success) {
             document.getElementById("code").innerText = data.code;
             document.getElementById("codeInputSection").style.display = "block";
