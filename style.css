@@ -442,3 +442,61 @@ button:hover {
 
 .left{ left:0; }
 .right{ right:0; }
+
+<style>
+.popup-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(6px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.popup-box {
+    width: 90%;
+    max-width: 400px;
+    padding: 25px;
+    border-radius: 16px;
+    background: rgba(15, 23, 42, 0.9);
+    border: 1px solid rgba(59,130,246,0.3);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+    text-align: center;
+    animation: fadeIn 0.4s ease;
+}
+
+.popup-box h2 {
+    margin-bottom: 15px;
+    background: linear-gradient(90deg,#60a5fa,#a78bfa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.popup-box p {
+    font-size: 14px;
+    margin-bottom: 20px;
+    color: #e5e7eb;
+    line-height: 1.6;
+}
+
+.popup-box button {
+    padding: 10px 18px;
+    border-radius: 8px;
+    border: none;
+    background: #3b82f6;
+    color: white;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.popup-box button:hover {
+    background: #2563eb;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: scale(0.9); }
+    to { opacity: 1; transform: scale(1); }
+}
+</style>
