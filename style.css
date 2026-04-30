@@ -443,7 +443,6 @@ button:hover {
 .left{ left:0; }
 .right{ right:0; }
 
-<style>
 .popup-box {
     width: 90%;
     max-width: 400px;
@@ -503,4 +502,3 @@ button:hover {
 .popup-buttons button:last-child:hover {
     background: rgba(255,255,255,0.15);
 }
-</style>
