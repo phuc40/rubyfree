@@ -129,12 +129,41 @@
     <button class="nav-btn right" onclick="nextAcc()">›</button>
 
 </div>
+
+        
             <!-- JS render -->
         </div>
     </div>
 </div>
 
+<div id="updatePopup" class="popup-overlay">
+    <div class="popup-box">
+        <h2>📢 Cập nhật mới</h2>
+        <p>
+            ✔ Thêm vòng quay may mắn<br>
+            ✔ Fix lỗi nhận mã<br>
+            ✔ Cập Nhật Bảng Giá Mới<br>
+        </p>
+
+        <button onclick="closePopup()">Đã hiểu 👍</button>
+    </div>
+</div>
+
 <script src="script.js"></script>
+
+<script>
+function closePopup() {
+    document.getElementById("updatePopup").style.display = "none";
+    localStorage.setItem("seenUpdate_v1", "true");
+}
+
+window.onload = () => {
+    const seen = localStorage.getItem("seenUpdate_v1");
+    if (seen) {
+        document.getElementById("updatePopup").style.display = "none";
+    }
+};
+</script>
 
 </body>
 </html>
