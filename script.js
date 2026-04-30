@@ -11,15 +11,18 @@ function getReward() {
     fetch("/create-token")
     .then(res => res.json())
     .then(data => {
+        console.log("TOKEN:", data.token);
+
         localStorage.setItem("reward_token", data.token);
         localStorage.setItem("start_time", Date.now());
 
         window.location.href = "https://link4m.com/6bAEoB2";
-    });
+    })
+    .catch(err => console.log("CREATE TOKEN ERROR:", err));
 }
 
-// ================= LOAD LẠI =================
-window.onload = function () {
+// ================= CHECK NHẬN MÃ =================
+function checkReward() {
     const token = localStorage.getItem("reward_token");
     const start = localStorage.getItem("start_time");
 
@@ -27,13 +30,17 @@ window.onload = function () {
 
     const now = Date.now();
 
-    if (now - start < 20000) return;
+    // ⏱ delay tối thiểu 5s
+    if (now - start < 5000) return;
 
+    // ⏱ quá 4 phút thì huỷ
     if (now - start > 240000) {
         localStorage.removeItem("reward_token");
         localStorage.removeItem("start_time");
         return;
     }
+
+    console.log("CHECKING TOKEN:", token);
 
     fetch("/get-code", {
         method: "POST",
@@ -46,21 +53,40 @@ window.onload = function () {
     .then(res => res.json())
     .then(data => {
         console.log("GET CODE RESPONSE:", data);
+
         if (data.success) {
             document.getElementById("code").innerText = data.code;
             document.getElementById("codeInputSection").style.display = "block";
-        } else {
-            if (data.code) {
-                document.getElementById("code").innerText = data.code;
-                document.getElementById("codeInputSection").style.display = "block";
-            }
-            alert(data.message);
-        }
-    });
 
-    localStorage.removeItem("reward_token");
-    localStorage.removeItem("start_time");
-};
+            // ✅ chỉ xoá khi thành công
+            localStorage.removeItem("reward_token");
+            localStorage.removeItem("start_time");
+
+        } else {
+            console.log("SERVER MESSAGE:", data.message);
+        }
+    })
+    .catch(err => console.log("GET CODE ERROR:", err));
+}
+
+// ================= AUTO CHECK =================
+
+// khi load trang
+window.addEventListener("load", () => {
+    createWheelItems();
+    checkReward();
+});
+
+// khi quay lại tab
+document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") {
+        checkReward();
+    }
+});
+
+// auto check mỗi 3s (chống miss)
+setInterval(checkReward, 3000);
+
 
 // ================= GỬI CODE =================
 function submitCode() {
