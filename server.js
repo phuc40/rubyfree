@@ -164,8 +164,18 @@ app.post("/update-acc", async (req, res) => {
 });
 
 // ===== TOKEN =====
-app.get("/create-token", (req, res) => {
-    res.json({ token: Math.random().toString(36).substring(2) + Date.now() });
+app.get("/create-token", async (req, res) => {
+    await waitForDB();
+
+    const token = Math.random().toString(36).substring(2) + Date.now();
+
+    await db.collection("tokens").insertOne({
+        token,
+        used: false,
+        createdAt: new Date()
+    });
+
+    res.json({ token });
 });
 
 // ===== UPLOAD SHOP =====
@@ -204,12 +214,29 @@ app.post("/get-code", async (req, res) => {
     try {
         await waitForDB();
 
-        const { deviceId } = req.body;
+        const { deviceId, token } = req.body;
         const ip = getIP(req);
+
+        if (!token) {
+            return res.json({ success: false, message: "Thiếu token" });
+        }
+
+        // 🔥 kiểm tra token
+        const tokenDoc = await db.collection("tokens").findOne({ token });
+
+        if (!tokenDoc || tokenDoc.used) {
+            return res.json({ success: false, message: "Token không hợp lệ hoặc đã dùng" });
+        }
+
+        // 🔥 đánh dấu đã dùng
+        await db.collection("tokens").updateOne(
+            { token },
+            { $set: { used: true } }
+        );
 
         const exist = await usersCollection.findOne({ deviceId });
         if (exist) {
-            return res.json({ success: false, code: exist.code });
+            return res.json({ success: true, code: exist.code });
         }
 
         const code = generateCode();
@@ -220,10 +247,10 @@ app.post("/get-code", async (req, res) => {
         res.json({ success: true, code });
 
     } catch (err) {
-        res.json({ success: false });
+        console.error(err);
+        res.json({ success: false, message: "Server lỗi" });
     }
 });
-
 // ===== SUBMIT CODE =====
 app.post("/submit-code", async (req, res) => {
     try {
