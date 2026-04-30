@@ -138,28 +138,42 @@
 
 <div id="updatePopup" class="popup-overlay">
     <div class="popup-box">
-        <h2>📢 Cập nhật mới</h2>
+        <h2>📢 Thông báo</h2>
         <p>
-            ✔ Thêm vòng quay may mắn<br>
+            ✔ Đã cập nhật vòng quay mới<br>
             ✔ Fix lỗi nhận mã<br>
-            ✔ Cập Nhật Bảng Giá Mới<br>
+            ✔ Cập Nhật Bảng Giá Mây El Dorado<br>
         </p>
 
-        <button onclick="closePopup()">Đã hiểu 👍</button>
+        <div class="popup-buttons">
+            <button onclick="closePopup()">Đóng</button>
+            <button onclick="hideFor2Hours()">Tắt 2 giờ ⏳</button>
+        </div>
     </div>
 </div>
 
 <script src="script.js"></script>
 
 <script>
+const POPUP_KEY = "popup_hidden_until";
+
 function closePopup() {
     document.getElementById("updatePopup").style.display = "none";
-    localStorage.setItem("seenUpdate_v1", "true");
+}
+
+function hideFor2Hours() {
+    const now = Date.now();
+    const twoHours = 2 * 60 * 60 * 1000;
+
+    localStorage.setItem(POPUP_KEY, now + twoHours);
+    closePopup();
 }
 
 window.onload = () => {
-    const seen = localStorage.getItem("seenUpdate_v1");
-    if (seen) {
+    const hiddenUntil = localStorage.getItem(POPUP_KEY);
+    const now = Date.now();
+
+    if (hiddenUntil && now < hiddenUntil) {
         document.getElementById("updatePopup").style.display = "none";
     }
 };
