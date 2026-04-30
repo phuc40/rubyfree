@@ -31,7 +31,7 @@ function checkReward() {
     const now = Date.now();
 
     // ⏱ delay tối thiểu 5s
-    if (now - start < 5000) return;
+    if (now - start < 20000) return;
 
     // ⏱ quá 4 phút thì huỷ
     if (now - start > 240000) {
